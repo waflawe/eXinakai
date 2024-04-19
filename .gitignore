@@ -1,0 +1,5 @@
+.idea/
+journal.py
+venv/
+.env
+**/__pycache__/
