@@ -1,9 +1,16 @@
 {% extends 'base.html' %}
 
 {% block title %}
-eXinakai home
++~ eXinakai ~+
 {% endblock %}
 
 {% block body %}
-<h1>Welcome to eXinakai home page!</h1>
+{% if action %}
+    {% if action == "login" and request.user.is_authenticated %}
+        <h5>{{request.user}}, Вы успешно вошли в систему.</h5>
+    {% elif action == "logout" %}
+        <h5>Вы успешно вышли из системы.</h5>
+    {% endif %}
+{% endif %}
+<h1>Добро пожаловать в eXinakai!</h1>
 {% endblock %}

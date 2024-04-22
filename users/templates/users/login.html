@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Вход
+{% endblock %}
+
+{% block body %}
+<h1>Вход в eXinakai!</h1>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in form %}
+        <h3>{{ field.label }}:</h3>
+        {{field}}
+    {% endfor %}
+    <br><br>
+    <button type="submit" class="btn btn-primary indent">Войти</button>
+</form>
+{% endblock %}
