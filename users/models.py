@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -33,10 +34,10 @@ class ExinakaiUserManager(BaseUserManager):
 class ExinakaiUser(AbstractBaseUser):
     username = models.CharField(
         verbose_name=_("Имя пользователя"),
-        max_length=64,
+        max_length=16,
         unique=True,
-        help_text=_("Не более 64 символов. Буквы, цифры, @/./+/-/_."),
-        validators=[UnicodeUsernameValidator()],
+        help_text=_("Не более 16 символов, не менее 5. Буквы, цифры, @/./+/-/_."),
+        validators=[UnicodeUsernameValidator(), MinLengthValidator(5)],
         error_messages={
             "unique": _("Пользователь с таким именем уже существует."),
         }
@@ -57,6 +58,7 @@ class ExinakaiUser(AbstractBaseUser):
         default=settings.DEFAULT_USER_TIMEZONE
     )
     date_joined = models.DateTimeField(verbose_name=_('Время регистрации'), auto_now_add=True)
+    is_active = models.BooleanField(verbose_name=_('Активен ли'), default=True)
 
     USERNAME_FIELD = "username"
     objects = ExinakaiUserManager()
@@ -65,7 +67,7 @@ class ExinakaiUser(AbstractBaseUser):
         verbose_name = _("Пользователь")
         verbose_name_plural = _("Пользователи")
 
-        db_table = "user"
+        db_table = "exinakai_user"
 
     def __str__(self):
         return f"{self.username}"

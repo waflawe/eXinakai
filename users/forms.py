@@ -22,14 +22,20 @@ class UserCreationForm(forms.ModelForm):
         model = User
         fields = "username", "email"
 
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        username_len = len(username)
+        if username_len < 5 or username_len > 64:
+            raise ValidationError("Неверная длина имени пользователя.", code="invalid")
+
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise ValidationError("Пароли не совпадают.")
+            raise ValidationError("Пароли не совпадают.", code="invalid")
         pass_length = len(password2)
-        if pass_length > 64 or pass_length < 5:
-            raise ValidationError("Недопустимая длина пароля.")
+        if pass_length > 64 or pass_length < 8:
+            raise ValidationError("Недопустимая длина пароля.", code="invalid")
         return password2
 
     def save(self, commit=True):
@@ -45,5 +51,5 @@ class UserAuthenticationForm(forms.Form):
         "class": "form-input"
     }), label="Имя пользователя")
     password = forms.CharField(max_length=64, min_length=8, widget=forms.PasswordInput(attrs={
-        "class": "form-input"
+        "class": "form-input",
     }), label="Пароль")

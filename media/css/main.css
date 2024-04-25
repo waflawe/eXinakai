@@ -1,0 +1,15 @@
+.indent{
+    text-indent: 20px;
+}
+
+.doubleindent{
+    text-indent: 40px;
+}
+
+.marginleft{
+    margin-left: 20px;
+}
+
+.doublemarginleft{
+    margin-left: 40px;
+}
