@@ -5,15 +5,24 @@
 {% endblock %}
 
 {% block body %}
-<h1>Регестрация в eXinakai!</h1>
+<h1 class="indent">Регестрация в eXinakai!</h1>
+{% if form.errors %}
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        <div id="form_errors">
+            {% for key, value in form.errors.items %}
+                <strong>{{ value }}</strong>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
-        <h3>{{ field.label }}:</h3>
-        {{field}}
+        <h3 class="doubleindent">{{ field.label }}:</h3>
+        <span class="doublemarginleft">{{field}}</span>
         <code>[{{ field.help_text }}]</code>
     {% endfor %}
     <br><br>
-    <button type="submit" class="btn btn-primary indent">Зарегестрироваться</button>
+    <button type="submit" class="btn btn-primary marginleft">Зарегестрироваться</button>
 </form>
 {% endblock %}

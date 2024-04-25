@@ -112,9 +112,21 @@ LOGGING = {
     },
 }
 
+# RUNTIME
 DEFAULT_USER_TIMEZONE = "Europe/London"
 CUSTOM_USER_AVATARS_DIR = "avatars"
-DEFAULT_USER_AVATAR_PATH = "default-user-icon.jpg"
+DEFAULT_USER_AVATAR_PATH = "images/default-user-icon.jpg"
+
+# EMAIL
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+
+# CELERY
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
@@ -130,8 +142,8 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = "static/"
+STATIC_ROOT = "static"
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "media/"
+MEDIA_ROOT = "media"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
