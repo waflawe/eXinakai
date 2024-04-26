@@ -1,13 +1,13 @@
-from django.views.generic import CreateView, View
-from django.http import HttpRequest, HttpResponse
+from typing import Dict, Optional
+
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from django.urls import reverse, reverse_lazy
-from django.shortcuts import render, redirect
+from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.generic import CreateView, View
 
-from typing import Optional, Dict
-
-from users.forms import UserCreationForm, UserAuthenticationForm
+from users.forms import PasswordResetForm, UserAuthenticationForm, UserCreationForm
 
 
 class SingUpView(CreateView):
@@ -47,17 +47,18 @@ class LogoutView(View):
 
 
 class ResetPasswordView(PasswordResetView):
+    form_class = PasswordResetForm
     template_name = 'users/password_reset.html'
     email_template_name = 'users/password_reset_email_message.html'
     subject_template_name = 'users/password_reset_subject_message.html'
     success_message = ""
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return f"{reverse('accounts:login')}?action=password-reset-done"
 
 
 class ConfirmPasswordResetView(PasswordResetConfirmView):
     template_name = 'users/password_reset_confirm.html'
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return f"{reverse('accounts:login')}?action=password-reset-complete"
