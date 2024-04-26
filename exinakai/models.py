@@ -10,7 +10,7 @@ class StorablePasswordsManager(models.Manager):
 
 
 class Password(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Владелец"), related_name=_("Владелец"))
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Владелец"), related_name="Владелец")
     note = models.CharField(max_length=256, verbose_name=_("Примета"))
     password = models.CharField(max_length=512, verbose_name=_("Пароль"))
     time_added = models.DateTimeField(auto_now_add=True, verbose_name=_("Время добавления"))

@@ -1,6 +1,6 @@
-import pytz
 from typing import Optional
 
+import pytz
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -15,11 +15,12 @@ def get_uploaded_avatar_path(instance: 'ExinakaiUser', filename: str) -> str:
 
 
 class ExinakaiUserManager(BaseUserManager):
-    def create_user(self, username: str, email: str, avatar: str, timezone: str, password: Optional[str] = None):
+    def create_user(self, username: str, email: str, avatar: str, timezone: str, password: Optional[str] = None) \
+            -> 'ExinakaiUser':
         if not email:
             raise ValueError("Users must have an email address")
 
-        user = self.model(
+        user: 'ExinakaiUser' = self.model(
             username=username,
             email=self.normalize_email(email),
             avatar=avatar,
@@ -76,6 +77,6 @@ class ExinakaiUser(AbstractBaseUser):
         if self.timezone not in pytz.common_timezones:
             raise ValidationError({"timezone": _("Неверная временная зона.")})
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         self.full_clean()
         return super().save(*args, **kwargs)

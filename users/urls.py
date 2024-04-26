@@ -1,6 +1,6 @@
 from django.urls import path
 
-from users.views import SingUpView, LoginView, LogoutView, ResetPasswordView, ConfirmPasswordResetView
+from users.views import ConfirmPasswordResetView, LoginView, LogoutView, ResetPasswordView, SingUpView
 
 app_name = "accounts"
 
