@@ -12,6 +12,8 @@
             <h5 class="indent">{{request.user}}, Вы успешно вошли в систему.</h5>
         {% elif action == "logout" %}
             <h5 class="indent">Вы успешно вышли из системы.</h5>
+        {% elif action == "settings-updated" %}
+            <h5 class="indent">Настройки успешно обновлены.</h5>
         {% endif %}
     </div>
     <br>

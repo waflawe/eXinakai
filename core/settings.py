@@ -115,7 +115,7 @@ LOGGING = {
 # RUNTIME
 DEFAULT_USER_TIMEZONE = "Europe/London"
 CUSTOM_USER_AVATARS_DIR = "avatars"
-DEFAULT_USER_AVATAR_PATH = "images/default-user-icon.jpg"
+DEFAULT_USER_AVATAR_PATH = "default-user-icon.jpg"
 
 # EMAIL
 EMAIL_HOST = 'smtp.gmail.com'

@@ -1,10 +1,13 @@
 from typing import Any, Dict, NoReturn, Optional, Union
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm as PasswordResetFormCore
 from django.core.exceptions import ValidationError
+from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
+from pytz import common_timezones
 
 from users.tasks import send_reset_password_mail
 
@@ -87,3 +90,29 @@ class PasswordResetForm(PasswordResetFormCore):
             to_email,
             html_email_template_name
         )
+
+
+class DataListInput(Select):
+    template_name = "users/widgets/datalist.html"
+
+
+class UpdateSettingsForm(forms.ModelForm):
+    timezones = (
+        (tzname, tzname) for tzname in common_timezones
+    )
+
+    timezone = forms.ChoiceField(
+        choices=timezones,
+        widget=DataListInput(attrs={"placeholder": f"Пример: {settings.DEFAULT_USER_TIMEZONE}"}),
+        label="Временная зона"
+    )
+
+    class Meta:
+        model = User
+        fields = "avatar", "timezone"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for fname, fvalue in self.fields.items():
+            fvalue.required = False
