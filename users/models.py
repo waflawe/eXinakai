@@ -1,17 +1,15 @@
 from typing import Optional
 
-import pytz
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
 def get_uploaded_avatar_path(instance: 'ExinakaiUser', filename: str) -> str:
-    return f"{settings.CUSTOM_USER_AVATARS_DIR}/{instance.pk}.{filename.split('.')[-1]}"
+    return f"{settings.CUSTOM_USER_AVATARS_DIR}/{filename}"
 
 
 class ExinakaiUserManager(BaseUserManager):
@@ -72,11 +70,3 @@ class ExinakaiUser(AbstractBaseUser):
 
     def __str__(self):
         return f"{self.username}"
-
-    def clean(self):
-        if self.timezone not in pytz.common_timezones:
-            raise ValidationError({"timezone": _("Неверная временная зона.")})
-
-    def save(self, *args, **kwargs) -> None:
-        self.full_clean()
-        return super().save(*args, **kwargs)

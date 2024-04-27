@@ -1,13 +1,14 @@
 from typing import Dict, Optional
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, View
 
-from users.forms import PasswordResetForm, UserAuthenticationForm, UserCreationForm
+from users.forms import PasswordResetForm, UpdateSettingsForm, UserAuthenticationForm, UserCreationForm
 
 
 class SingUpView(CreateView):
@@ -62,3 +63,25 @@ class ConfirmPasswordResetView(PasswordResetConfirmView):
 
     def get_success_url(self) -> str:
         return f"{reverse('accounts:login')}?action=password-reset-complete"
+
+
+class SettingsView(LoginRequiredMixin, View):
+    login_url = reverse_lazy("accounts:login")
+
+    def get(self, request: HttpRequest, data: Optional[Dict] = None) -> HttpResponse:
+        form = UpdateSettingsForm(data)
+        context = {
+            "form": form,
+            "bad_data": True if data else False
+        }
+        return render(request, "users/settings.html", context=context)
+
+    def post(self, request: HttpRequest) -> HttpResponse:
+        old_timezone = request.user.timezone
+        form = UpdateSettingsForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            if form.instance.timezone == "":
+                form.instance.timezone = old_timezone
+            form.instance.save(update_fields=["avatar", "timezone"])
+            return redirect(f"{reverse('exinakai:index')}?action=settings-updated")
+        return self.get(request, request.POST)

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Настройки для {{ request.user.username }}
+{% endblock %}
+
+{% block body %}
+{% if bad_data %}
+<div class="alert alert-danger alert-dismissible" role="alert">
+    <div id="form_errors">
+        <strong>Неверные данные.</strong>
+    </div>
+</div>
+{% endif %}
+<h1 class="indent">Настройки {{ request.user.username }}:</h1>
+<br>
+<div class="doubleindent mb-3 row">
+  <label class="col-sm-2 col-form-label">Имя пользователя</label>
+    <div class="col-sm-10">
+      <input type="text" disabled value="{{ request.user.username }}">
+    </div>
+</div>
+<div class="doubleindent mb-3 row">
+  <label class="col-sm-2 col-form-label">Почта</label>
+    <div class="col-sm-10">
+      <input disabled type="text" value="{{ request.user.email }}">
+    </div>
+</div>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for i in form %}
+        <div class="doubleindent mb-3 row">
+          <label class="col-sm-2 col-form-label">{{i.label}}</label>
+            <div class="col-sm-10">
+              {{i}}
+            </div>
+        </div>
+    {% endfor %}
+    <br>
+    <button type="submit" class="btn btn-primary marginleft">Сохранить</button>
+</form>
+{% endblock %}
