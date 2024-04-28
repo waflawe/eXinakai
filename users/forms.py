@@ -3,6 +3,7 @@ from typing import Any, Dict, NoReturn, Optional, Union
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import PasswordChangeForm as PasswordChangeFormCore
 from django.contrib.auth.forms import PasswordResetForm as PasswordResetFormCore
 from django.core.exceptions import ValidationError
 from django.forms.widgets import Select
@@ -90,6 +91,18 @@ class PasswordResetForm(PasswordResetFormCore):
             to_email,
             html_email_template_name
         )
+
+
+class PasswordChangeForm(PasswordChangeFormCore):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for field, label in {
+            "old_password": "Старый пароль",
+            "new_password1": "Новый пароль",
+            "new_password2": "Подтверждение нового пароля"
+        }.items():
+            self.fields[field].label = label
 
 
 class DataListInput(Select):

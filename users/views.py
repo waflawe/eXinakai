@@ -2,13 +2,19 @@ from typing import Dict, Optional
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
+from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView, PasswordResetView
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, View
 
-from users.forms import PasswordResetForm, UpdateSettingsForm, UserAuthenticationForm, UserCreationForm
+from users.forms import (
+    PasswordChangeForm,
+    PasswordResetForm,
+    UpdateSettingsForm,
+    UserAuthenticationForm,
+    UserCreationForm,
+)
 
 
 class SingUpView(CreateView):
@@ -52,7 +58,6 @@ class ResetPasswordView(PasswordResetView):
     template_name = 'users/password_reset.html'
     email_template_name = 'users/password_reset_email_message.html'
     subject_template_name = 'users/password_reset_subject_message.html'
-    success_message = ""
 
     def get_success_url(self) -> str:
         return f"{reverse('accounts:login')}?action=password-reset-done"
@@ -63,6 +68,14 @@ class ConfirmPasswordResetView(PasswordResetConfirmView):
 
     def get_success_url(self) -> str:
         return f"{reverse('accounts:login')}?action=password-reset-complete"
+
+
+class ChangePasswordView(PasswordChangeView):
+    form_class = PasswordChangeForm
+    template_name = 'users/password_change.html'
+
+    def get_success_url(self) -> str:
+        return f"{reverse('exinakai:index')}?action=password-change-done"
 
 
 class SettingsView(LoginRequiredMixin, View):
