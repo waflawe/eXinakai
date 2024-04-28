@@ -36,9 +36,14 @@
         </form>
       </div>
       {% else %}
-        <form method="get" action="{% url 'accounts:logout' %}">
-          <button class="btn btn-outline-info d-flex" type="submit">Выйти</button>
-        </form>
+        <div style="display: flex">
+            <form method="get" action="{% url 'accounts:password-change' %}">
+              <button class="btn btn-outline-danger d-flex" type="submit">Изменить пароль</button>
+            </form>
+            <form method="get" action="{% url 'accounts:logout' %}" style="margin-left: 10px">
+              <button class="btn btn-outline-info d-flex" type="submit">Выйти</button>
+            </form>
+        </div>
       {% endif %}
     </div>
   </div>

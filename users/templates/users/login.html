@@ -15,16 +15,17 @@
     {% endif %}
     </div>
     <br>
-{% endif %}
-
-<h1 class="indent">Вход в eXinakai!</h1>
-{% if bad_details %}
+{% elif bad_details %}
+    <br>
     <div class="alert alert-danger alert-dismissible" role="alert">
         <div id="form_errors">
             <strong>Неверная комбинация.</strong>
         </div>
     </div>
+    <br>
 {% endif %}
+
+<h1 class="indent">Вход в eXinakai!</h1>
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
