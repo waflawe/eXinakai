@@ -3,11 +3,12 @@ from typing import Dict, Optional
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
-from django.shortcuts import render, redirect, reverse
+from django.shortcuts import redirect, render
+from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
 from exinakai.forms import AddPasswordForm
-from exinakai.services import CryptographicKeyRequiredMixin, EncryptPasswordService
+from exinakai.services import AllPasswordsService, CryptographicKeyRequiredMixin, EncryptPasswordService
 
 
 class IndexView(TemplateView):
@@ -27,7 +28,7 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
         }
         return render(request, "exinakai/add_password.html", context=context)
 
-    def post(self, request: HttpRequest):
+    def post(self, request: HttpRequest) -> HttpResponse:
         form = AddPasswordForm(request.POST)
         if form.is_valid():
             EncryptPasswordService.encrypt_and_insert(
@@ -38,3 +39,12 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
             )
             return redirect(f"{reverse('exinakai:all-passwords')}?action=add-password-success")
         return self.get(request, request.POST)
+
+
+class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        context = {
+            "passwords": AllPasswordsService.get_all_passwords(request.session["cryptographic_key"], request.user),
+            "action": request.GET.get("action", None)
+        }
+        return render(request, "exinakai/all_passwords.html", context=context)

@@ -23,7 +23,7 @@ class Password(models.Model):
 
         base_manager_name = "storable"
         default_manager_name = "storable"
-        get_latest_by = ordering = "time_added",
+        get_latest_by = ordering = "-time_added",
         indexes = [
             models.Index(fields=["note"])
         ]

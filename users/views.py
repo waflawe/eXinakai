@@ -17,9 +17,9 @@ from users.forms import (
     UserCreationForm,
 )
 from users.services import (
+    CryptographicKeyEmptyRequiredMixin,
     GenerateCryptographicKeyService,
     SetSessionCryptographicKey,
-    CryptographicKeyEmptyRequiredMixin
 )
 
 
@@ -71,10 +71,10 @@ class ActivateCryptographicKeyView(CryptographicKeyEmptyRequiredMixin, FormView)
     template_name = "users/activate_key.html"
     form_class = ActivateCryptographicKeyForm
 
-    def get_success_url(self):
+    def get_success_url(self) -> str:
         return f"{reverse('exinakai:index')}?action=activate-cryptographic-key-success"
 
-    def form_valid(self, form):
+    def form_valid(self, form: ActivateCryptographicKeyForm) -> HttpResponse:
         SetSessionCryptographicKey.set_key(self.request.session, form.cleaned_data["cryptographic_key"])
         return super().form_valid(form)
 
