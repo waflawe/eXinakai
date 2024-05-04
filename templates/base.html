@@ -30,6 +30,9 @@
               <a class="nav-link text-white" href="{% url 'exinakai:add-password' %}">Добавить пароль</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link text-white" href="{% url 'exinakai:all-passwords' %}">Мои пароли</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link text-white" href="{% url 'accounts:settings' %}">{{ request.user.username }}</a>
             </li>
           {% endif %}

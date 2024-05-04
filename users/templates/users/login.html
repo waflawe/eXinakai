@@ -25,15 +25,18 @@
     <br>
 {% endif %}
 
-<h1 class="indent">Вход в eXinakai!</h1>
+<div style="text-align:center;">
+<h1 class="">Вход в eXinakai!</h1>
 <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in form %}
-        <h3 class="doubleindent">{{ field.label }}:</h3>
-        <span class="doublemarginleft">{{field}}</span>
+        <h3 class="">{{ field.label }}:</h3>
+        <span class="">{{field}}</span>
     {% endfor %}
-    <a href="{% url 'accounts:password-reset' %}" style="margin-left: 5px">Забыли пароль?</a>
+    <br>
+    <a href="{% url 'accounts:password-reset' %}">Забыли пароль?</a>
     <br><br>
-    <button type="submit" class="btn btn-primary marginleft">Войти</button>
+    <button type="submit" class="btn btn-primary ">Войти</button>
 </form>
+</div>
 {% endblock %}
