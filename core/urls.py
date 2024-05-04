@@ -19,7 +19,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path("", include("exinakai.urls")),
-    path("account/", include("users.urls"))
+    path("accounts/", include("users.urls"))
 ]
 
 urlpatterns += static(settings.STATIC_URL,  document_root=settings.STATIC_ROOT)

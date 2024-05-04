@@ -8,8 +8,8 @@
 {% if action %}
     <br>
     <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-        {% if action == "login" and request.user.is_authenticated %}
-            <h5 class="indent">{{request.user}}, Вы успешно вошли в систему.</h5>
+        {% if action == "activate-cryptographic-key-success" and request.user.is_authenticated %}
+            <h5 class="indent">{{request.user}}, Вы успешно активировали ключ шифрования.</h5>
         {% elif action == "logout" %}
             <h5 class="indent">Вы успешно вышли из системы.</h5>
         {% elif action == "settings-updated" %}

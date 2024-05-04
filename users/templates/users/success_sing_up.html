@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}
+:)
+{% endblock %}
+
+{% block body %}
+<span style="text-align: center;">
+    <h2>Регистрация прошла успешно!</h2>
+    <h4>Вот Ваш ключ для добавления, чтения и удаления паролей:</h4>
+    <br>
+    <h2>{{crypto_key}}</h2>
+    <br>
+    <h4>Обязательно сохраните этот ключ и не давайте его никому!!</h4>
+</span>
+{% endblock %}

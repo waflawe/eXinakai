@@ -128,6 +128,9 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
+# SESSIONS
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 

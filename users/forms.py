@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordChangeForm as PasswordChangeFormCore
 from django.contrib.auth.forms import PasswordResetForm as PasswordResetFormCore
 from django.core.exceptions import ValidationError
+from django.core.validators import MinLengthValidator
 from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 from pytz import common_timezones
@@ -129,3 +130,11 @@ class UpdateSettingsForm(forms.ModelForm):
 
         for fname, fvalue in self.fields.items():
             fvalue.required = False
+
+
+class ActivateCryptographicKeyForm(forms.Form):
+    cryptographic_key = forms.CharField(
+        label="Ключ шифрования",
+        max_length=128,
+        validators=(MinLengthValidator(8),)
+    )
