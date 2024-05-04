@@ -3,17 +3,23 @@ from typing import Dict, Optional
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView, PasswordResetView
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, View
+from django.views.generic import CreateView, FormView, View
 
 from users.forms import (
+    ActivateCryptographicKeyForm,
     PasswordChangeForm,
     PasswordResetForm,
     UpdateSettingsForm,
     UserAuthenticationForm,
     UserCreationForm,
+)
+from users.services import (
+    GenerateCryptographicKeyService,
+    SetSessionCryptographicKey,
+    CryptographicKeyEmptyRequiredMixin
 )
 
 
@@ -22,7 +28,21 @@ class SingUpView(CreateView):
     form_class = UserCreationForm
 
     def get_success_url(self) -> str:
-        return reverse("accounts:login")
+        return reverse("accounts:sing-up-success")
+
+
+class SuccessSingUpView(View):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        referer = (request.META.get("HTTP_REFERER", "")
+                   .replace(request.get_host(), "")
+                   .replace("http://", "")
+                   .replace("https://", ""))
+        if referer == reverse("accounts:register"):
+            context = {
+                "crypto_key": GenerateCryptographicKeyService.generate()
+            }
+            return render(request, "users/success_sing_up.html", context=context)
+        raise Http404
 
 
 class LoginView(View):
@@ -42,9 +62,21 @@ class LoginView(View):
             user = authenticate(username=request.POST["username"], password=request.POST["password"])
             if user is not None:
                 login(request, user)
-                return redirect(f"{reverse('exinakai:index')}?action=login")
+                return redirect(reverse('accounts:activate-cryptographic-key'))
 
         return self.get(request, request.POST)
+
+
+class ActivateCryptographicKeyView(CryptographicKeyEmptyRequiredMixin, FormView):
+    template_name = "users/activate_key.html"
+    form_class = ActivateCryptographicKeyForm
+
+    def get_success_url(self):
+        return f"{reverse('exinakai:index')}?action=activate-cryptographic-key-success"
+
+    def form_valid(self, form):
+        SetSessionCryptographicKey.set_key(self.request.session, form.cleaned_data["cryptographic_key"])
+        return super().form_valid(form)
 
 
 class LogoutView(View):
@@ -70,7 +102,7 @@ class ConfirmPasswordResetView(PasswordResetConfirmView):
         return f"{reverse('accounts:login')}?action=password-reset-complete"
 
 
-class ChangePasswordView(PasswordChangeView):
+class ChangePasswordView(LoginRequiredMixin, PasswordChangeView):
     form_class = PasswordChangeForm
     template_name = 'users/password_change.html'
 
