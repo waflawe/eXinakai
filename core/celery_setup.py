@@ -7,7 +7,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 app = Celery(
     'eXinakai',
-    include=['exinakai.tasks', 'users.tasks'],
+    include=['users.tasks'],
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND
 )

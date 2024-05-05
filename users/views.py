@@ -7,6 +7,7 @@ from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, FormView, View
+from random import randrange
 
 from users.forms import (
     ActivateCryptographicKeyForm,
@@ -20,7 +21,9 @@ from users.services import (
     CryptographicKeyEmptyRequiredMixin,
     GenerateCryptographicKeyService,
     SetSessionCryptographicKey,
+    get_upload_crop_path
 )
+from users.tasks import make_center_crop
 
 
 class SingUpView(CreateView):
@@ -117,16 +120,21 @@ class SettingsView(LoginRequiredMixin, View):
         form = UpdateSettingsForm(data)
         context = {
             "form": form,
+            "user_avatar": get_upload_crop_path(str(request.user.avatar)),
+            "any_random_integer": randrange(100000),
             "bad_data": True if data else False
         }
         return render(request, "users/settings.html", context=context)
 
     def post(self, request: HttpRequest) -> HttpResponse:
         old_timezone = request.user.timezone
+        old_avatar_path = str(request.user.avatar)
         form = UpdateSettingsForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             if form.instance.timezone == "":
                 form.instance.timezone = old_timezone
             form.instance.save(update_fields=["avatar", "timezone"])
+            if str(form.instance.avatar) != old_avatar_path:
+                make_center_crop.delay(str(form.instance.avatar))
             return redirect(f"{reverse('exinakai:index')}?action=settings-updated")
         return self.get(request, request.POST)

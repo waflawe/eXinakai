@@ -2,6 +2,20 @@ from cryptography.fernet import Fernet
 from django.contrib.auth.mixins import AccessMixin
 from django.contrib.sessions.backends.base import SessionBase
 from django.http import HttpRequest
+from django.conf import settings
+
+
+def get_upload_crop_path(path: str) -> str:
+    """ Функция для получения пути к центрированному изображению по пути исходного. """
+
+    if path == settings.DEFAULT_USER_AVATAR_PATH:
+        return path
+
+    splitted_path = path.split("/")
+    filename = splitted_path.pop()
+    name, extension = filename.split(".")
+    splitted_path.append(f"{name}_crop.{extension}")
+    return "/".join(splitted_path)
 
 
 class CryptographicKeyEmptyRequiredMixin(AccessMixin):
