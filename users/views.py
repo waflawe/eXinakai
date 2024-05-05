@@ -1,3 +1,4 @@
+from random import randrange
 from typing import Dict, Optional
 
 from django.contrib.auth import authenticate, login, logout
@@ -7,7 +8,6 @@ from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, FormView, View
-from random import randrange
 
 from users.forms import (
     ActivateCryptographicKeyForm,
@@ -20,8 +20,8 @@ from users.forms import (
 from users.services import (
     CryptographicKeyEmptyRequiredMixin,
     GenerateCryptographicKeyService,
-    SetSessionCryptographicKey,
-    get_upload_crop_path
+    SetSessionCryptographicKeyService,
+    get_upload_crop_path,
 )
 from users.tasks import make_center_crop
 
@@ -74,12 +74,20 @@ class ActivateCryptographicKeyView(CryptographicKeyEmptyRequiredMixin, FormView)
     template_name = "users/activate_key.html"
     form_class = ActivateCryptographicKeyForm
 
-    def get_success_url(self) -> str:
-        return f"{reverse('exinakai:index')}?action=activate-cryptographic-key-success"
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        return self.render_to_response(self.get_context_data(bad_key=kwargs.get("bad_key", False)))
 
     def form_valid(self, form: ActivateCryptographicKeyForm) -> HttpResponse:
-        SetSessionCryptographicKey.set_key(self.request.session, form.cleaned_data["cryptographic_key"])
+        if not SetSessionCryptographicKeyService.is_key_valid(
+                self.request.user,
+                form.cleaned_data["cryptographic_key"]
+        ):
+            return self.get(self.request, bad_key=True)
+        SetSessionCryptographicKeyService.set_key(self.request.session, form.cleaned_data["cryptographic_key"])
         return super().form_valid(form)
+
+    def get_success_url(self) -> str:
+        return f"{reverse('exinakai:index')}?action=activate-cryptographic-key-success"
 
 
 class LogoutView(View):
