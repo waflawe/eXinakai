@@ -3,6 +3,7 @@ from typing import NamedTuple, Tuple
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.contrib.auth.mixins import AccessMixin
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
@@ -47,10 +48,13 @@ class PasswordRender(NamedTuple):
 
 class AllPasswordsService(object):
     @staticmethod
-    def get_all_passwords(cryptographic_key: str, user: User) -> Tuple[PasswordRender, ...]:
+    def get_all_passwords(cryptographic_key: str, user: User, search: str | None) -> Tuple[PasswordRender, ...]:
+        queryset = Password.storable.filter(owner=user)
+        if search:
+            queryset = queryset.filter(note__icontains=search)
         return tuple(
             PasswordRender(password, AllPasswordsService.get_decrypted_password(cryptographic_key, password.password))
-            for password in Password.storable.filter(owner=user)
+            for password in queryset
         )
 
     @staticmethod
