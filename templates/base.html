@@ -23,11 +23,6 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if request.user.is_authenticated %}
-            {% if 'cryptographic_key' not in request.session %}
-                <li class="nav-item">
-                  <a class="nav-link text-white" href="{% url 'accounts:activate-cryptographic-key' %}">Активировать ключ шифрования</a>
-                </li>
-            {% endif %}
             <li class="nav-item">
               <a class="nav-link text-white" href="{% url 'exinakai:add-password' %}">Добавить пароль</a>
             </li>

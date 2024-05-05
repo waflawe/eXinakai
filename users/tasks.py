@@ -1,15 +1,14 @@
+import os
 from typing import Any, Dict, Optional, Union
 
 from celery import shared_task
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm
-from PIL.Image import open as open_image
 from PIL.Image import Image
+from PIL.Image import open as open_image
 
 from users.services import get_upload_crop_path
-
-import os
 
 User = get_user_model()
 

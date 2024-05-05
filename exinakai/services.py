@@ -1,9 +1,12 @@
 from typing import NamedTuple, Tuple
 
 from cryptography.fernet import Fernet
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import redirect
+from django.urls.base import reverse
 
 from exinakai.models import Password
 
@@ -11,11 +14,12 @@ User = get_user_model()
 
 
 class CryptographicKeyRequiredMixin(AccessMixin):
-    permission_denied_message = "Активация ключа шифрования необходима"
+    def handle_no_permission(self) -> HttpResponseRedirect:
+        return redirect(reverse("accounts:activate-cryptographic-key"))
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         if not request.session.get("cryptographic_key", False):
-            self.handle_no_permission()
+            return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -51,5 +55,8 @@ class AllPasswordsService(object):
 
     @staticmethod
     def get_decrypted_password(cryptographic_key: str, password: str) -> str:
-        fernet = Fernet(bytes(cryptographic_key, "utf-8"))
+        try:
+            fernet = Fernet(bytes(cryptographic_key, "utf-8"))
+        except ValueError:
+            return settings.INVALID_CRYPTOGRAPHIC_KEY_ERROR_MESSAGE
         return fernet.decrypt(bytes(password, "utf-8")).decode("utf-8")

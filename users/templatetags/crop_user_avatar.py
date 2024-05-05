@@ -1,5 +1,6 @@
 from django import template
 from django.contrib.auth import get_user_model
+
 from users.services import get_upload_crop_path
 
 User = get_user_model()
