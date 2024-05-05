@@ -63,6 +63,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "django.template.context_processors.media",
             ],
+            'libraries': {
+                'users_tags': 'users.templatetags.crop_user_avatar',
+            },
         },
     },
 ]

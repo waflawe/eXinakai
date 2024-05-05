@@ -2,7 +2,14 @@ from typing import Any, Dict, Optional, Union
 
 from celery import shared_task
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm
+from PIL.Image import open as open_image
+from PIL.Image import Image
+
+from users.services import get_upload_crop_path
+
+import os
 
 User = get_user_model()
 
@@ -26,3 +33,26 @@ def send_reset_password_mail(
         to_email,
         html_email_template_name
     )
+
+
+@shared_task
+def make_center_crop(avatar_path: str) -> None:
+    """ Таска для центрирования аватарки/вложения. """
+
+    image_full_path = str(settings.BASE_DIR / settings.MEDIA_ROOT / avatar_path)
+    image = open_image(os.path.join(image_full_path))
+    new_crop_image_path = str(settings.BASE_DIR / settings.MEDIA_ROOT / get_upload_crop_path(avatar_path))
+    _center_crop(image).save(new_crop_image_path)
+
+
+def _center_crop(img: Image) -> Image:
+    width, height = img.size
+    if width / height == 1:
+        return img
+
+    left = (width - min(width, height)) / 2
+    top = (height - min(width, height)) / 2
+    right = (width + min(width, height)) / 2
+    bottom = (height + min(width, height)) / 2
+
+    return img.crop((int(left), int(top), int(right), int(bottom)))

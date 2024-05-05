@@ -1,3 +1,5 @@
+{% load users_tags %}
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -33,7 +35,10 @@
               <a class="nav-link text-white" href="{% url 'exinakai:all-passwords' %}">Мои пароли</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-white" href="{% url 'accounts:settings' %}">{{ request.user.username }}</a>
+              <a class="nav-link text-white" href="{% url 'accounts:settings' %}">
+                  <img src="{{MEDIA_URL}}{{request.user|get_crop_user_avatar}}?{{any_random_integer}}" alt="Avatar" width="25" height="25">
+                  {{ request.user.username }}
+              </a>
             </li>
           {% endif %}
       </ul>
