@@ -41,10 +41,17 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
         return self.get(request, request.POST)
 
 
-class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
-    def get(self, request: HttpRequest) -> HttpResponse:
+class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, TemplateView):
+    template_name = "exinakai/all_passwords.html"
+
+    def get_context_data(self, **kwargs):
+        passwords = AllPasswordsService.get_all_passwords(
+            self.request.session["cryptographic_key"],
+            self.request.user,
+            self.request.GET.get("search", None)
+        )
         context = {
-            "passwords": AllPasswordsService.get_all_passwords(request.session["cryptographic_key"], request.user),
-            "action": request.GET.get("action", None)
+            "passwords": passwords,
+            "action": self.request.GET.get("action", None)
         }
-        return render(request, "exinakai/all_passwords.html", context=context)
+        return context
