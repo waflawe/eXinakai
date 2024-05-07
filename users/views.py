@@ -20,8 +20,8 @@ from users.forms import (
 )
 from users.services import (
     CryptographicKeyEmptyRequiredMixin,
-    GenerateCryptographicKeyService,
     SetSessionCryptographicKeyService,
+    generate_cryptographic_key,
     get_upload_crop_path,
 )
 from users.tasks import make_center_crop, send_change_account_email_mail_message
@@ -59,7 +59,7 @@ class SuccessSingUpView(View):
                    .replace("https://", ""))
         if referer == reverse("accounts:register"):
             context = {
-                "crypto_key": GenerateCryptographicKeyService.generate()
+                "crypto_key": generate_cryptographic_key()
             }
             return render(request, "users/success_sing_up.html", context=context)
         raise Http404
