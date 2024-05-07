@@ -6,7 +6,7 @@ from django.contrib.sessions.backends.base import SessionBase
 from django.http import HttpRequest
 
 from exinakai.models import Password
-from exinakai.services import AllPasswordsService
+from exinakai.services import get_decrypted_password
 
 User = get_user_model()
 
@@ -31,10 +31,8 @@ class CryptographicKeyEmptyRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-class GenerateCryptographicKeyService(object):
-    @staticmethod
-    def generate() -> str:
-        return Fernet.generate_key().decode("utf-8")
+def generate_cryptographic_key() -> str:
+    return Fernet.generate_key().decode("utf-8")
 
 
 class SetSessionCryptographicKeyService(object):
@@ -42,7 +40,7 @@ class SetSessionCryptographicKeyService(object):
     def is_key_valid(user: User, cryptographic_key: str) -> bool:
         password = Password.storable.filter(owner=user).only("password").first()
         if password:
-            decrypted_password = AllPasswordsService.get_decrypted_password(cryptographic_key, password.password)
+            decrypted_password = get_decrypted_password(cryptographic_key, password.password)
             if decrypted_password == settings.INVALID_CRYPTOGRAPHIC_KEY_ERROR_MESSAGE:
                 return False
         return True

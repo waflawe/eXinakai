@@ -8,7 +8,7 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
 from exinakai.forms import AddPasswordForm
-from exinakai.services import AllPasswordsService, CryptographicKeyRequiredMixin, EncryptPasswordService
+from exinakai.services import CryptographicKeyRequiredMixin, encrypt_and_save_password, get_all_passwords
 
 
 class IndexView(TemplateView):
@@ -31,7 +31,7 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
     def post(self, request: HttpRequest) -> HttpResponse:
         form = AddPasswordForm(request.POST)
         if form.is_valid():
-            EncryptPasswordService.encrypt_and_insert(
+            encrypt_and_save_password(
                 request.user,
                 request.session["cryptographic_key"],
                 form.cleaned_data["password1"],
@@ -45,7 +45,7 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
     template_name = "exinakai/all_passwords.html"
 
     def get_context_data(self, **kwargs):
-        passwords = AllPasswordsService.get_all_passwords(
+        passwords = get_all_passwords(
             self.request.session["cryptographic_key"],
             self.request.user,
             self.request.GET.get("search", None)
