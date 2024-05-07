@@ -5,38 +5,40 @@
 {% endblock %}
 
 {% block body %}
-{% if action %}
-    <br>
-    <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-    {% if action == 'password-reset-done' %}
-        <h5 class="indent">Ссылка для сброса пароля отправлена на почту.</h5>
-    {% elif action == 'password-reset-complete' %}
-        <h5 class="indent">Пароль изменен успешно.</h5>
-    {% endif %}
-    </div>
-    <br>
-{% elif bad_details %}
-    <br>
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <div id="form_errors">
-            <strong>Неверная комбинация.</strong>
+<div class="form-content my-3 p-3">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 rounded-lg mt-0 mb-3">
+                    <div class="card-header justify-content-center">
+                      <h3 class="font-weight-light my-4 text-center">Вход в eXinakai!</h3>
+                    </div>
+                    {% if bad_details %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <div id="form_errors">
+                                <strong>Неверная комбинация.</strong>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            {% for i in form %}
+                            <div class="doubleindent mb-3 row">
+                              <label class="col-form-label">{{i.label}}:</label>
+                                <div class="col-sm-10">
+                                  {{i}}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <a href="{% url 'accounts:password-reset' %}" class="doublemarginleft">Забыли пароль?</a>
+                            <br><br>
+                            <button type="submit" class="btn btn-primary doublemarginleft">Войти</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <br>
-{% endif %}
-
-<div style="text-align:center;">
-<h1 class="">Вход в eXinakai!</h1>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% for field in form %}
-        <h3 class="">{{ field.label }}:</h3>
-        <span class="">{{field}}</span>
-    {% endfor %}
-    <br>
-    <a href="{% url 'accounts:password-reset' %}">Забыли пароль?</a>
-    <br><br>
-    <button type="submit" class="btn btn-primary ">Войти</button>
-</form>
 </div>
 {% endblock %}

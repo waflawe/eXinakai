@@ -122,7 +122,7 @@ class UpdateSettingsForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = "avatar", "timezone"
+        fields = "email", "avatar", "timezone"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

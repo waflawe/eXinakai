@@ -5,6 +5,9 @@ from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
@@ -55,3 +58,22 @@ def _center_crop(img: Image) -> Image:
     bottom = (height + min(width, height)) / 2
 
     return img.crop((int(left), int(top), int(right), int(bottom)))
+
+
+@shared_task
+def send_change_account_email_mail_message(email: str) -> None:
+    subject = render_to_string('users/change_account_email_subject.html')
+    html_message = render_to_string(
+        'users/change_account_email_message.html',
+        {'email': email}
+    )
+    plain_message = strip_tags(html_message)
+
+    send_mail(
+        subject,
+        plain_message,
+        None,
+        [email],
+        fail_silently=True,
+        html_message=html_message
+    )
