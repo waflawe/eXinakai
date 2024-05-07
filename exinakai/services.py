@@ -3,8 +3,8 @@ from typing import NamedTuple, Tuple
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.contrib.auth.mixins import AccessMixin
+from django.core.cache import cache
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls.base import reverse
@@ -38,6 +38,8 @@ class EncryptPasswordService(object):
     @staticmethod
     def insert(user: User, password: str, note: str) -> None:
         Password.storable.create(owner=user, note=note, password=password)
+        key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
+        cache.delete(key=key)
         return
 
 
@@ -49,7 +51,11 @@ class PasswordRender(NamedTuple):
 class AllPasswordsService(object):
     @staticmethod
     def get_all_passwords(cryptographic_key: str, user: User, search: str | None) -> Tuple[PasswordRender, ...]:
-        queryset = Password.storable.filter(owner=user)
+        key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
+        queryset = cache.get(key=key)
+        if not queryset:
+            queryset = Password.storable.filter(owner=user)
+            cache.set(key, queryset)
         if search:
             queryset = queryset.filter(note__icontains=search)
         return tuple(

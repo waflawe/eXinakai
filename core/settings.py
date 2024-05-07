@@ -125,12 +125,26 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 
+DEFAULT_FROM_EMAIL = "noreply@exinakai"
+
 # CELERY
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 # SESSIONS
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# CACHE
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("DJANGO_CACHE_URL"),
+        "TIMEOUT": 60*60
+    }
+}
+
+DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"
+ALL_USER_PASSWORDS_CACHE_NAME = "passwords"
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

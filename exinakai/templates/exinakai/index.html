@@ -16,6 +16,10 @@
             <h5 class="indent">Настройки успешно обновлены.</h5>
         {% elif action == "password-change-done" %}
             <h5 class="indent">Пароль изменен успешно.</h5>
+        {% elif action == 'password-reset-done' %}
+            <h5 class="indent">Ссылка для сброса пароля отправлена на почту.</h5>
+        {% elif action == 'password-reset-complete' %}
+            <h5 class="indent">Пароль изменен успешно.</h5>
         {% endif %}
     </div>
     <br>
