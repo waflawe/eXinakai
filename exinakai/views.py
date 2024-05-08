@@ -8,6 +8,7 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
 from exinakai.forms import AddPasswordForm
+from exinakai.passgen import Options, generate_random_password
 from exinakai.services import (
     CryptographicKeyRequiredMixin,
     check_user_perms_to_edit_password,
@@ -50,7 +51,7 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
 class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, TemplateView):
     template_name = "exinakai/all_passwords.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         passwords = get_all_passwords(
             self.request.session["cryptographic_key"],
             self.request.user,
@@ -71,3 +72,22 @@ class DeletePasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         delete_password(request.user, pk=pk)
         return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-password-success")
+
+
+class GeneratePasswordView(TemplateView):
+    template_name = "exinakai/exinakai_generate_password.html"
+
+    def get_context_data(self, **kwargs) -> Dict:
+        context = super().get_context_data(**kwargs)
+
+        default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
+        submited_sumbols = self.request.GET.keys()
+        characters = "".join(alias for alias, sumbols in default_characters.items() if sumbols in submited_sumbols)
+
+        length: str = self.request.GET.get("length", "0")
+        clean_length: int = length if length.isnumeric() and 8 <= int(length) <= 32 else 16
+
+        context["random_password"] = generate_random_password(Options(clean_length, characters or "ludp"))
+        context["submited_sumbols"] = submited_sumbols
+        context["length"] = length
+        return context
