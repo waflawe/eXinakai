@@ -8,7 +8,13 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
 from exinakai.forms import AddPasswordForm
-from exinakai.services import CryptographicKeyRequiredMixin, encrypt_and_save_password, get_all_passwords
+from exinakai.services import (
+    CryptographicKeyRequiredMixin,
+    check_user_perms_to_edit_password,
+    delete_password,
+    encrypt_and_save_password,
+    get_all_passwords,
+)
 
 
 class IndexView(TemplateView):
@@ -55,3 +61,13 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
             "action": self.request.GET.get("action", None)
         }
         return context
+
+
+class DeletePasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        password = check_user_perms_to_edit_password(request.user, pk=pk)
+        return render(request, "exinakai/delete_password.html", context={"password": password})
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        delete_password(request.user, pk=pk)
+        return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-password-success")
