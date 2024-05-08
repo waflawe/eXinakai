@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
 from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls.base import reverse
@@ -60,3 +61,22 @@ def get_all_passwords(cryptographic_key: str, user: User, search: str | None) ->
         PasswordRender(password, get_decrypted_password(cryptographic_key, password.password))
         for password in queryset
     )
+
+
+def get_password(**kwargs) -> Password:
+    return Password.storable.get(**kwargs)
+
+
+def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
+    password = get_password(**kwargs)
+    if not password.owner == user:
+        raise PermissionDenied("Вы не можете редактировать этот пароль.")
+    return password
+
+
+def delete_password(user: User, **kwargs) -> None:
+    password = check_user_perms_to_edit_password(user, **kwargs)
+    password.delete()
+    key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
+    cache.delete(key=key)
+    return
