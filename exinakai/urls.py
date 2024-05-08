@@ -1,6 +1,6 @@
 from django.urls import path
 
-from exinakai.views import AddPasswordView, AllPasswordsView, DeletePasswordView, IndexView
+from exinakai.views import AddPasswordView, AllPasswordsView, DeletePasswordView, GeneratePasswordView, IndexView
 
 app_name = "exinakai"
 
@@ -8,5 +8,6 @@ urlpatterns = [
     path("", IndexView.as_view(), name="index"),
     path("add-password/", AddPasswordView.as_view(), name="add-password"),
     path("delete-password/<int:pk>/", DeletePasswordView.as_view(), name="delete-password"),
+    path("generate-password/", GeneratePasswordView.as_view(), name="generate-password"),
     path("all-passwords/", AllPasswordsView.as_view(), name="all-passwords")
 ]
