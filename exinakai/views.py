@@ -89,5 +89,5 @@ class GeneratePasswordView(TemplateView):
 
         context["random_password"] = generate_random_password(Options(clean_length, characters or "ludp"))
         context["submited_sumbols"] = submited_sumbols
-        context["length"] = length
+        context["length"] = clean_length
         return context

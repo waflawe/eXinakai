@@ -1,43 +1,24 @@
-{% extends 'base.html' %}
+{% extends 'base_with_form.html' %}
 
 {% block title %}
 Регистрация
 {% endblock %}
 
-{% block body %}
-<div class="form-content my-3 p-3">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-5">
-                <div class="card shadow-lg border-0 rounded-lg mt-0 mb-3">
-                    <div class="card-header justify-content-center">
-                      <h3 class="font-weight-light my-4 text-center">Регестрация в eXinakai!</h3>
-                    </div>
-                    {% if bad_details %}
-                        <div class="alert alert-danger alert-dismissible" role="alert">
-                            <div id="form_errors">
-                                <strong>Некоторые поля заполнены неверно.</strong>
-                            </div>
-                        </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <form method="POST">
-                            {% csrf_token %}
-                            {% for i in form %}
-                            <div class="doubleindent mb-3 row">
-                              <label class="col-form-label">{{i.label}}:</label>
-                                <div class="col-sm-10">
-                                  {{i}}
-                                </div>
-                                <code style="font-size: x-small;">[{{i.help_text}}]</code>
-                            </div>
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary doublemarginleft">Зарегестрироваться</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+{% block form_header %}
+<h3 class="font-weight-light my-4 text-center">Регестрация в eXinakai!</h3>
+{% endblock %}
+{% block form_errors %}
+{% if bad_details %}
+    <div class="alert alert-danger alert-dismissible" role="alert">
+        <div id="form_errors">
+            <strong>Некоторые поля заполнены неверно.</strong>
         </div>
     </div>
-</div>
+{% endif %}
+{% endblock %}
+{% block form_afterfield %}
+<code style="font-size: x-small;">[{{i.help_text}}]</code>
+{% endblock %}
+{% block form_button %}
+<button type="submit" class="btn btn-primary doublemarginleft">Зарегестрироваться</button>
 {% endblock %}

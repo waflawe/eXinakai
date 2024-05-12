@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="form-content my-3 p-3">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="card shadow-lg border-0 rounded-lg mt-0 mb-3">
+                    <div class="card-header justify-content-center">
+                        {% block form_header %}
+                        {% endblock %}
+                    </div>
+                    {% block form_errors %}
+                    {% endblock %}
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            {% for i in form %}
+                            <div class="doubleindent mb-3 row">
+                              <label class="col-form-label">{{i.label}}:</label>
+                                <div class="col-sm-10">
+                                  {{i}}
+                                </div>
+                                {% block form_afterfield %}
+                                {% endblock %}
+                            </div>
+                            {% endfor %}
+                            {% block form_button %}
+                            {% endblock %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
