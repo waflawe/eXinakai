@@ -44,7 +44,7 @@ class ExinakaiUser(AbstractBaseUser):
     email = models.EmailField(
         verbose_name=_('Почта'),
         unique=True,
-        help_text=_("Электронная почта для сброса пароля.")
+        help_text=_("Электронная почта для аккаунта.")
     )
     avatar = models.ImageField(
         verbose_name=_("Аватарка"),

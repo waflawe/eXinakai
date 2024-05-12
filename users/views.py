@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView, PasswordResetView
+from django.contrib.sites.shortcuts import get_current_site
 from django.forms.widgets import CheckboxInput, TextInput
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -27,7 +28,12 @@ from users.services import (
     generate_cryptographic_key,
     get_upload_crop_path,
 )
-from users.tasks import make_center_crop, send_2fa_code_mail_message, send_change_account_email_mail_message
+from users.tasks import (
+    make_center_crop,
+    send_2fa_code_mail_message,
+    send_change_account_email_mail_message,
+    send_change_account_password_mail_message,
+)
 
 User = get_user_model()
 
@@ -141,8 +147,8 @@ class LogoutView(View):
 class ResetPasswordView(PasswordResetView):
     form_class = PasswordResetForm
     template_name = 'users/password_reset.html'
-    email_template_name = 'users/password_reset_email_message.html'
-    subject_template_name = 'users/password_reset_subject_message.html'
+    email_template_name = 'users/mails/password_reset_email_message.html'
+    subject_template_name = 'users/mails/password_reset_subject_message.html'
 
     def get_success_url(self) -> str:
         return f"{reverse('exinakai:index')}?action=password-reset-done"
@@ -158,6 +164,12 @@ class ConfirmPasswordResetView(PasswordResetConfirmView):
 class ChangePasswordView(LoginRequiredMixin, PasswordChangeView):
     form_class = PasswordChangeForm
     template_name = 'users/password_change.html'
+
+    def form_valid(self, form: PasswordChangeForm) -> HttpResponse:
+        redirect_ = super().form_valid(form)
+        domain = get_current_site(self.request).domain
+        send_change_account_password_mail_message.delay(form.user.email, domain)
+        return redirect_
 
     def get_success_url(self) -> str:
         return f"{reverse('exinakai:index')}?action=password-change-done"

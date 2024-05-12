@@ -83,8 +83,8 @@ def send_mail_with_subject_and_body_html(
 @shared_task
 def send_change_account_email_mail_message(email: str) -> None:
     send_mail_with_subject_and_body_html(
-        'users/change_account_email_subject.html',
-        'users/change_account_email_message.html',
+        'users/mails/change_account_email_subject.html',
+        'users/mails/change_account_email_message.html',
         email,
         context={'email': email}
     )
@@ -93,8 +93,18 @@ def send_change_account_email_mail_message(email: str) -> None:
 @shared_task
 def send_2fa_code_mail_message(email: str, code: int) -> None:
     send_mail_with_subject_and_body_html(
-        "users/2fa_code_email_subject.html",
-        "users/2fa_code_email_message.html",
+        "users/mails/2fa_code_email_subject.html",
+        "users/mails/2fa_code_email_message.html",
         email,
         context={"code": code}
+    )
+
+
+@shared_task
+def send_change_account_password_mail_message(email: str, domain: str) -> None:
+    send_mail_with_subject_and_body_html(
+        "users/mails/change_account_password_subject.html",
+        "users/mails/change_account_password_message.html",
+        email,
+        context={"domain": domain}
     )

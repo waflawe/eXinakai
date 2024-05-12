@@ -36,7 +36,7 @@ def get_upload_crop_path(path: str) -> str:
 
     splitted_path = path.split("/")
     filename = splitted_path.pop()
-    name, extension = filename.split(".")
+    name, extension = filename.rsplit(".", 1)
     splitted_path.append(f"{name}_crop.{extension}")
     return "/".join(splitted_path)
 

@@ -52,14 +52,16 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
     template_name = "exinakai/all_passwords.html"
 
     def get_context_data(self, **kwargs) -> Dict:
+        search = self.request.GET.get("search", None)
         passwords = get_all_passwords(
             self.request.session["cryptographic_key"],
             self.request.user,
-            self.request.GET.get("search", None)
+            search
         )
         context = {
             "passwords": passwords,
-            "action": self.request.GET.get("action", None)
+            "action": self.request.GET.get("action", None),
+            "search": search
         }
         return context
 
