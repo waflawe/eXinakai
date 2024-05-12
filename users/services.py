@@ -1,14 +1,31 @@
+import secrets
+import string
+from typing import NoReturn
+
 from cryptography.fernet import Fernet
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
 from django.contrib.sessions.backends.base import SessionBase
-from django.http import HttpRequest
+from django.http import Http404, HttpRequest
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
 
 User = get_user_model()
+
+
+def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str) -> None | NoReturn:
+    is_requests_hosts_equal = request.get_host() in request.META.get("HTTP_REFERER", "")
+    referer = (request.META.get("HTTP_REFERER", "")
+               .replace(request.get_host(), "")
+               .replace("http://", "")
+               .replace("https://", ""))
+    if not (is_requests_hosts_equal and any(
+        url in referer for url in valid_urls
+    )):
+        raise Http404
+    return None
 
 
 def get_upload_crop_path(path: str) -> str:
@@ -49,3 +66,7 @@ class SetSessionCryptographicKeyService(object):
     def set_key(session: SessionBase, cryptographic_key: str) -> None:
         session["cryptographic_key"] = cryptographic_key
         return
+
+
+def generate_2fa_code() -> str:
+    return "".join(secrets.choice(string.digits) for i in range(6))

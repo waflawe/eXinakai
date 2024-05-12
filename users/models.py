@@ -58,6 +58,7 @@ class ExinakaiUser(AbstractBaseUser):
     )
     date_joined = models.DateTimeField(verbose_name=_('Время регистрации'), auto_now_add=True)
     is_active = models.BooleanField(verbose_name=_('Активен ли'), default=True)
+    is_2fa_enabled = models.BooleanField(verbose_name=_('Включена ли 2FA'), default=False)
 
     USERNAME_FIELD = "username"
     objects = ExinakaiUserManager()

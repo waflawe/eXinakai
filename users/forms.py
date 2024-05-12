@@ -122,7 +122,7 @@ class UpdateSettingsForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = "email", "avatar", "timezone"
+        fields = "email", "avatar", "timezone", "is_2fa_enabled"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -135,4 +135,12 @@ class ActivateCryptographicKeyForm(forms.Form):
     cryptographic_key = forms.CharField(
         label="Ключ шифрования",
         max_length=512,
+    )
+
+
+class TwoFactorAuthenticationForm(forms.Form):
+    code = forms.CharField(
+        label="Код аутентификации",
+        help_text="Код аутентификации, который был выслан Вам на почту.",
+        max_length=6
     )

@@ -4,9 +4,9 @@ from typing import Dict, Optional
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView, PasswordResetView
-from django.forms.widgets import TextInput
-from django.http import Http404, HttpRequest, HttpResponse
-from django.shortcuts import redirect, render
+from django.forms.widgets import CheckboxInput, TextInput
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, FormView, View
 
@@ -14,6 +14,7 @@ from users.forms import (
     ActivateCryptographicKeyForm,
     PasswordChangeForm,
     PasswordResetForm,
+    TwoFactorAuthenticationForm,
     UpdateSettingsForm,
     UserAuthenticationForm,
     UserCreationForm,
@@ -21,10 +22,12 @@ from users.forms import (
 from users.services import (
     CryptographicKeyEmptyRequiredMixin,
     SetSessionCryptographicKeyService,
+    check_is_redirect_url_valid,
+    generate_2fa_code,
     generate_cryptographic_key,
     get_upload_crop_path,
 )
-from users.tasks import make_center_crop, send_change_account_email_mail_message
+from users.tasks import make_center_crop, send_2fa_code_mail_message, send_change_account_email_mail_message
 
 User = get_user_model()
 
@@ -53,16 +56,11 @@ class SingUpView(CreateView):
 
 class SuccessSingUpView(View):
     def get(self, request: HttpRequest) -> HttpResponse:
-        referer = (request.META.get("HTTP_REFERER", "")
-                   .replace(request.get_host(), "")
-                   .replace("http://", "")
-                   .replace("https://", ""))
-        if referer == reverse("accounts:register"):
-            context = {
-                "crypto_key": generate_cryptographic_key()
-            }
-            return render(request, "users/success_sing_up.html", context=context)
-        raise Http404
+        check_is_redirect_url_valid(request, reverse("accounts:register"))
+        context = {
+            "crypto_key": generate_cryptographic_key()
+        }
+        return render(request, "users/success_sing_up.html", context=context)
 
 
 class LoginView(View):
@@ -81,10 +79,34 @@ class LoginView(View):
         if form.is_valid():
             user = authenticate(username=request.POST["username"], password=request.POST["password"])
             if user is not None:
-                login(request, user)
-                return redirect(reverse('accounts:activate-cryptographic-key'))
+                if not user.is_2fa_enabled:
+                    login(request, user)
+                    return redirect(reverse('accounts:activate-cryptographic-key'))
+                code = generate_2fa_code()
+                request.session["2fa_code"] = code
+                request.session["2fa_code_user_id"] = user.pk
+                send_2fa_code_mail_message.delay(user.email, code)
+                return redirect(reverse("accounts:two-factor-authentication"))
 
         return self.get(request, request.POST)
+
+
+class TwoFactorAuthenticationView(View):
+    def get(self, request: HttpRequest, data: Optional[Dict] = None) -> HttpResponse:
+        check_is_redirect_url_valid(request, reverse("accounts:login"), reverse("accounts:two-factor-authentication"))
+        context = {
+            "form": TwoFactorAuthenticationForm()
+        }
+        if data:
+            context = context | data
+        return render(request, "users/two_factor_authentication.html", context=context)
+
+    def post(self, request: HttpRequest) -> HttpResponse:
+        if request.session.get("2fa_code", 0) == request.POST.get("code", 1):
+            login(request, get_object_or_404(User, pk=request.session["2fa_code_user_id"]))
+            request.session.pop("2fa_code"), request.session.pop("2fa_code_user_id")
+            return redirect(reverse('accounts:activate-cryptographic-key'))
+        return self.get(request, {"bad_code": True})
 
 
 class ActivateCryptographicKeyView(LoginRequiredMixin, CryptographicKeyEmptyRequiredMixin, FormView):
@@ -148,6 +170,8 @@ class SettingsView(LoginRequiredMixin, View):
         form = UpdateSettingsForm(data)
         if not data:
             form.fields["email"].widget = TextInput(attrs={"placeholder": request.user.email})
+            is_2fa_enabled_attrs = {"checked": ""} if request.user.is_2fa_enabled else {}
+            form.fields["is_2fa_enabled"].widget = CheckboxInput(attrs=is_2fa_enabled_attrs)
         context = {
             "form": form,
             "user_avatar": get_upload_crop_path(str(request.user.avatar)),
@@ -162,7 +186,7 @@ class SettingsView(LoginRequiredMixin, View):
         form = UpdateSettingsForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             self.check_is_timezone_and_email_updated(form.instance, old_timezone, old_email)
-            form.instance.save(update_fields=["email", "avatar", "timezone"])
+            form.instance.save(update_fields=["email", "avatar", "timezone", "is_2fa_enabled"])
             self.process_avatar_and_email_if_updated(form.instance, old_avatar_path, old_email)
             return redirect(f"{reverse('accounts:settings')}?action=settings-updated")
         return self.get(request, request.POST)

@@ -10,12 +10,14 @@ from users.views import (
     SettingsView,
     SingUpView,
     SuccessSingUpView,
+    TwoFactorAuthenticationView,
 )
 
 app_name = "accounts"
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
+    path("two-factor-authentication/", TwoFactorAuthenticationView.as_view(), name="two-factor-authentication"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("sing-up/", SingUpView.as_view(), name="register"),
     path("sing-up-success/", SuccessSingUpView.as_view(), name="sing-up-success"),

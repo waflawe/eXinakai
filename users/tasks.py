@@ -60,20 +60,41 @@ def _center_crop(img: Image) -> Image:
     return img.crop((int(left), int(top), int(right), int(bottom)))
 
 
-@shared_task
-def send_change_account_email_mail_message(email: str) -> None:
-    subject = render_to_string('users/change_account_email_subject.html')
-    html_message = render_to_string(
-        'users/change_account_email_message.html',
-        {'email': email}
-    )
+def send_mail_with_subject_and_body_html(
+        subject_template: str,
+        body_template: str,
+        recipient_mail: str,
+        context: Optional[Dict] = None
+) -> None:
+    subject = render_to_string(subject_template)
+    html_message = render_to_string(body_template, context)
     plain_message = strip_tags(html_message)
 
     send_mail(
         subject,
         plain_message,
         None,
-        [email],
+        [recipient_mail],
         fail_silently=True,
         html_message=html_message
+    )
+
+
+@shared_task
+def send_change_account_email_mail_message(email: str) -> None:
+    send_mail_with_subject_and_body_html(
+        'users/change_account_email_subject.html',
+        'users/change_account_email_message.html',
+        email,
+        context={'email': email}
+    )
+
+
+@shared_task
+def send_2fa_code_mail_message(email: str, code: int) -> None:
+    send_mail_with_subject_and_body_html(
+        "users/2fa_code_email_subject.html",
+        "users/2fa_code_email_message.html",
+        email,
+        context={"code": code}
     )
