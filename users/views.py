@@ -7,7 +7,7 @@ from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmVi
 from django.contrib.sites.shortcuts import get_current_site
 from django.forms.widgets import CheckboxInput, TextInput
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, FormView, View
 
@@ -24,9 +24,10 @@ from users.services import (
     CryptographicKeyEmptyRequiredMixin,
     SetSessionCryptographicKeyService,
     check_is_redirect_url_valid,
-    generate_2fa_code,
     generate_cryptographic_key,
     get_upload_crop_path,
+    make_2fa_authentication,
+    validate_2fa_code,
 )
 from users.tasks import (
     make_center_crop,
@@ -88,9 +89,7 @@ class LoginView(View):
                 if not user.is_2fa_enabled:
                     login(request, user)
                     return redirect(reverse('accounts:activate-cryptographic-key'))
-                code = generate_2fa_code()
-                request.session["2fa_code"] = code
-                request.session["2fa_code_user_id"] = user.pk
+                code = make_2fa_authentication(request.session, user)
                 send_2fa_code_mail_message.delay(user.email, code)
                 return redirect(reverse("accounts:two-factor-authentication"))
 
@@ -108,9 +107,9 @@ class TwoFactorAuthenticationView(View):
         return render(request, "users/two_factor_authentication.html", context=context)
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        if request.session.get("2fa_code", 0) == request.POST.get("code", 1):
-            login(request, get_object_or_404(User, pk=request.session["2fa_code_user_id"]))
-            request.session.pop("2fa_code"), request.session.pop("2fa_code_user_id")
+        user = validate_2fa_code(request.session, request.POST)
+        if user:
+            login(request, user)
             return redirect(reverse('accounts:activate-cryptographic-key'))
         return self.get(request, {"bad_code": True})
 

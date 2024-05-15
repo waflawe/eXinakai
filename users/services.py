@@ -1,6 +1,6 @@
 import secrets
 import string
-from typing import NoReturn
+from typing import Mapping, NoReturn
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
 from django.contrib.sessions.backends.base import SessionBase
 from django.http import Http404, HttpRequest
+from django.shortcuts import get_object_or_404
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
@@ -68,5 +69,17 @@ class SetSessionCryptographicKeyService(object):
         return
 
 
-def generate_2fa_code() -> str:
-    return "".join(secrets.choice(string.digits) for i in range(6))
+def make_2fa_authentication(session: SessionBase, user: User) -> str:
+    code = "".join(secrets.choice(string.digits) for _ in range(6))
+    session["2fa_code"] = code
+    session["2fa_code_user_id"] = user.pk
+    session.set_expiry(60*5)
+    return code
+
+
+def validate_2fa_code(session: SessionBase, data: Mapping) -> User | None:
+    if session.get("2fa_code", 0) == data.get("code", 1):
+        pk = session["2fa_code_user_id"]
+        session.flush()
+        return get_object_or_404(User, pk=pk)
+    return None
