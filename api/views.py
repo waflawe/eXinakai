@@ -7,6 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.permissions import IsUserCryptographicKeyValid
 from api.serializers import (
     AuthTokenSerializer,
     CryptographicKeySerializer,
@@ -15,7 +16,7 @@ from api.serializers import (
     PasswordsSerializer,
     TwoFactorAuthenticationCodeSerializer,
 )
-from exinakai.models import Password
+from exinakai.services import encrypt_and_save_password, get_all_passwords
 from users.services import SetSessionCryptographicKeyService, make_2fa_authentication, validate_2fa_code
 from users.tasks import send_2fa_code_mail_message
 
@@ -85,20 +86,37 @@ class UserLogoutAPIView(APIView):
     def post(self, request: Request, *args, **kwargs) -> Response:
         token = Token.objects.get(user=request.user)
         token.delete()
+        request.session.flush()
         data = DetailSerializer({"detail": "Выход из системы совершен."}).data
         return Response(data, status=status.HTTP_200_OK)
 
 
 class PasswordViewSet(
     mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     lookup_url_kwarg = "pk"
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
     serializer_class = PasswordsSerializer
 
     def get_queryset(self) -> QuerySet:
-        return Password.storable.filter(owner=self.request.user)
+        return get_all_passwords(self.request.user, self.request.GET.get("search", None), to_tuple=False)
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        data = DetailSerializer({"detail": "Пароль добавлен успешно."}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer: PasswordsSerializer) -> None:
+        cryptographic_key = self.request.session["cryptographic_key"]
+        password, note = serializer.initial_data["password"], serializer.initial_data["note"]
+        encrypt_and_save_password(self.request.user, cryptographic_key, password, note)
+
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        super().destroy(request, *args, **kwargs)
+        data = DetailSerializer({"detail": "Пароль удален успешно."}).data
+        return Response(data, status=status.HTTP_204_NO_CONTENT)

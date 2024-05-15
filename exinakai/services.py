@@ -1,4 +1,4 @@
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import AccessMixin
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls.base import reverse
@@ -47,7 +48,13 @@ def get_decrypted_password(cryptographic_key: str, password: str) -> str:
     return fernet.decrypt(bytes(password, "utf-8")).decode("utf-8")
 
 
-def get_all_passwords(cryptographic_key: str, user: User, search: str | None) -> Tuple[PasswordRender, ...]:
+def get_all_passwords(
+        user: User,
+        search: Optional[bool] = None,
+        *,
+        to_tuple: Optional[bool] = True,
+        cryptographic_key: Optional[str] = None
+) -> Tuple[PasswordRender, ...] | QuerySet:
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     queryset = cache.get(key=key)
 
@@ -57,10 +64,12 @@ def get_all_passwords(cryptographic_key: str, user: User, search: str | None) ->
     if search:
         queryset = queryset.filter(note__icontains=search)
 
-    return tuple(
-        PasswordRender(password, get_decrypted_password(cryptographic_key, password.password))
-        for password in queryset
-    )
+    if to_tuple:
+        return tuple(
+            PasswordRender(password, get_decrypted_password(cryptographic_key, password.password))
+            for password in queryset
+        )
+    return queryset
 
 
 def get_password(**kwargs) -> Password:

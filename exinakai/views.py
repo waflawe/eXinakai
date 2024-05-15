@@ -54,9 +54,9 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
     def get_context_data(self, **kwargs) -> Dict:
         search = self.request.GET.get("search", None)
         passwords = get_all_passwords(
-            self.request.session["cryptographic_key"],
             self.request.user,
-            search
+            search,
+            cryptographic_key=self.request.session["cryptographic_key"],
         )
         context = {
             "passwords": passwords,

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from exinakai.models import Password
+from exinakai.services import get_decrypted_password
 
 
 class DetailSerializer(serializers.Serializer):
@@ -29,10 +30,10 @@ class PasswordsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Password
-        fields = "note", "password", "time_added"
+        fields = "id", "note", "password", "time_added"
 
     def get_password(self, password: Password) -> str:
-        return password.password
+        return get_decrypted_password(self.context["request"].session["cryptographic_key"], password.password)
 
     def get_time_added(self, password: Password) -> str:
         return str(password.time_added)
