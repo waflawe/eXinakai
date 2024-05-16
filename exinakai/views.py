@@ -8,13 +8,13 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
 from exinakai.forms import AddPasswordForm
-from exinakai.passgen import Options, generate_random_password
 from exinakai.services import (
     CryptographicKeyRequiredMixin,
     check_user_perms_to_edit_password,
     delete_password,
     encrypt_and_save_password,
     get_all_passwords,
+    generate_random_password_from_request
 )
 
 
@@ -82,14 +82,9 @@ class GeneratePasswordView(TemplateView):
     def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
 
-        default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
-        submited_sumbols = self.request.GET.keys()
-        characters = "".join(alias for alias, sumbols in default_characters.items() if sumbols in submited_sumbols)
-
-        length: str = self.request.GET.get("length", "0")
-        clean_length: int = length if length.isnumeric() and 8 <= int(length) <= 32 else 16
-
-        context["random_password"] = generate_random_password(Options(clean_length, characters or "ludp"))
+        random_password, submited_sumbols, length = generate_random_password_from_request(self.request.GET)
+        context["random_password"] = random_password
         context["submited_sumbols"] = submited_sumbols
-        context["length"] = clean_length
+        context["length"] = length
+
         return context

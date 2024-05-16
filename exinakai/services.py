@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional, Tuple, Mapping, KeysView
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -12,6 +12,7 @@ from django.shortcuts import redirect
 from django.urls.base import reverse
 
 from exinakai.models import Password
+from exinakai.passgen import Options, generate_random_password
 
 User = get_user_model()
 
@@ -89,3 +90,18 @@ def delete_password(user: User, **kwargs) -> None:
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     cache.delete(key=key)
     return
+
+
+def generate_random_password_from_request(request_data: Mapping) -> tuple[str, KeysView, int]:
+    default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
+    submited_sumbols = request_data.keys()
+    characters = "".join(alias for alias, sumbols in default_characters.items() if sumbols in submited_sumbols)
+
+    length: str = request_data.get("length", "0")
+    clean_length: int = length if length.isnumeric() and 8 <= int(length) <= 32 else 16
+
+    return (
+        generate_random_password(Options(clean_length, characters or "ludp")),
+        submited_sumbols,
+        clean_length
+    )

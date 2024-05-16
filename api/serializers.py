@@ -67,3 +67,7 @@ class PasswordsSerializer(serializers.ModelSerializer):
 
     def get_time_added(self, password: Password) -> Dict:
         return datetime_to_timezone(password.time_added, self.context["request"].user.timezone)
+
+
+class RandomPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()

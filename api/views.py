@@ -20,8 +20,9 @@ from api.serializers import (
     DetailSerializer,
     PasswordsSerializer,
     TwoFactorAuthenticationCodeSerializer,
+    RandomPasswordSerializer
 )
-from exinakai.services import encrypt_and_save_password, get_all_passwords
+from exinakai.services import encrypt_and_save_password, get_all_passwords, generate_random_password_from_request
 from users.services import SetSessionCryptographicKeyService, make_2fa_authentication, validate_2fa_code
 from users.tasks import send_2fa_code_mail_message, send_change_account_password_mail_message
 
@@ -154,3 +155,12 @@ class PasswordViewSet(
         super().destroy(request, *args, **kwargs)
         data = DetailSerializer({"detail": "Пароль удален успешно."}).data
         return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+
+class GeneratePasswordAPIView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request: Request) -> Response:
+        password, *_ = generate_random_password_from_request(request.GET)
+        data = RandomPasswordSerializer({"password": password}).data
+        return Response(data, status=status.HTTP_200_OK)
