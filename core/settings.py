@@ -163,7 +163,8 @@ REST_FRAMEWORK = {
 
 # dj-rest-auth
 REST_AUTH = {
-    "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer"
+    "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer",
+    "OLD_PASSWORD_FIELD_ENABLED": True
 }
 
 DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"

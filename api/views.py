@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from dj_rest_auth.views import (
     PasswordResetView as PasswordResetViewCore,
     PasswordResetConfirmView as PasswordResetConfirmViewCore,
+    PasswordChangeView as PasswordChangeViewCore
 )
 
 from api.permissions import IsUserCryptographicKeyValid
@@ -22,7 +23,7 @@ from api.serializers import (
 )
 from exinakai.services import encrypt_and_save_password, get_all_passwords
 from users.services import SetSessionCryptographicKeyService, make_2fa_authentication, validate_2fa_code
-from users.tasks import send_2fa_code_mail_message
+from users.tasks import send_2fa_code_mail_message, send_change_account_password_mail_message
 
 User = get_user_model()
 
@@ -105,11 +106,23 @@ class PasswordResetView(PasswordResetViewCore):
         return Response(data, status=status.HTTP_202_ACCEPTED)
 
 
-class PasswordResetConfirmView(PasswordResetConfirmViewCore):
-    def post(self, request: Request, *args, **kwargs) -> Response:
-        super().post(request, *args, **kwargs)
+class SuccessChangePasswordResponseMixin(object):
+    def get_response(self) -> Response:
         data = DetailSerializer({"detail": "Пароль аккаунта изменен успешно."}).data
         return Response(data, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(SuccessChangePasswordResponseMixin, PasswordResetConfirmViewCore):
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        super().post(request, *args, **kwargs)
+        return self.get_response()
+
+
+class PasswordChangeView(SuccessChangePasswordResponseMixin, PasswordChangeViewCore):
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        super().post(request, *args, **kwargs)
+        send_change_account_password_mail_message.delay(request.user.email, None)
+        return self.get_response()
 
 
 class PasswordViewSet(

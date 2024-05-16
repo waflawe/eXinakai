@@ -8,7 +8,8 @@ from api.views import (
     UserLogoutAPIView,
     UserTwoFactorAuthenticationAPIView,
     PasswordResetView,
-    PasswordResetConfirmView
+    PasswordResetConfirmView,
+    PasswordChangeView
 )
 
 router = SimpleRouter()
@@ -22,4 +23,5 @@ urlpatterns = [
     path("token/logout/", UserLogoutAPIView.as_view(), name="token-logout"),
     path('password/reset/', PasswordResetView.as_view(), name='password-reset'),
     path('password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('password/change/', PasswordChangeView.as_view(), name='rest_password_change')
 ]

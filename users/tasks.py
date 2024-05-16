@@ -101,7 +101,7 @@ def send_2fa_code_mail_message(email: str, code: int) -> None:
 
 
 @shared_task
-def send_change_account_password_mail_message(email: str, domain: str) -> None:
+def send_change_account_password_mail_message(email: str, domain: str | None) -> None:
     send_mail_with_subject_and_body_html(
         "users/mails/change_account_password_subject.html",
         "users/mails/change_account_password_message.html",
