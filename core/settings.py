@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
+    'dj_rest_auth',
 
     "exinakai.apps.ExinakaiConfig",
     "users.apps.UsersConfig",
@@ -158,6 +159,11 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 20,
+}
+
+# dj-rest-auth
+REST_AUTH = {
+    "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer"
 }
 
 DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"

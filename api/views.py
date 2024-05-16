@@ -6,6 +6,10 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from dj_rest_auth.views import (
+    PasswordResetView as PasswordResetViewCore,
+    PasswordResetConfirmView as PasswordResetConfirmViewCore,
+)
 
 from api.permissions import IsUserCryptographicKeyValid
 from api.serializers import (
@@ -88,6 +92,23 @@ class UserLogoutAPIView(APIView):
         token.delete()
         request.session.flush()
         data = DetailSerializer({"detail": "Выход из системы совершен."}).data
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class PasswordResetView(PasswordResetViewCore):
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        super().post(request, *args, **kwargs)
+        data = DetailedCodeSerializer({
+            "detail": "Сообщение для сброса пароля отправлено на почту.",
+            "code": "MAIL_SENDED"
+        }).data
+        return Response(data, status=status.HTTP_202_ACCEPTED)
+
+
+class PasswordResetConfirmView(PasswordResetConfirmViewCore):
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        super().post(request, *args, **kwargs)
+        data = DetailSerializer({"detail": "Пароль аккаунта изменен успешно."}).data
         return Response(data, status=status.HTTP_200_OK)
 
 

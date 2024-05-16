@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from dj_rest_auth.serializers import PasswordResetSerializer as PasswordResetSerializerCore
 from django.contrib.auth import get_user_model
 from datetime import datetime
 from typing import Dict, Optional
@@ -6,6 +7,7 @@ import pytz
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
+from users.forms import PasswordResetForm
 
 User = get_user_model()
 
@@ -38,6 +40,18 @@ class TwoFactorAuthenticationCodeSerializer(serializers.Serializer):
 
 class CryptographicKeySerializer(serializers.Serializer):
     cryptographic_key = serializers.CharField(max_length=512)
+
+
+class PasswordResetSerializer(PasswordResetSerializerCore):
+    def get_email_options(self) -> Dict:
+        return {
+            "subject_template_name": 'users/mails/password_reset_subject_message.html',
+            "email_template_name": 'users/mails/password_reset_email_message.html'
+        }
+
+    @property
+    def password_reset_form_class(self):
+        return PasswordResetForm
 
 
 class PasswordsSerializer(serializers.ModelSerializer):
