@@ -1,7 +1,23 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from datetime import datetime
+from typing import Dict, Optional
+import pytz
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
+
+User = get_user_model()
+
+
+def datetime_to_timezone(dt: datetime, timezone: str, attribute_name: Optional[str] = "time_added") -> Dict:
+    """Приведение datetime объекта к временной зоне."""
+
+    dt = pytz.timezone(timezone).localize(datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second))
+    return {
+        attribute_name: (dt + dt.utcoffset()).strftime("%H:%M %d/%m/%Y"),
+        "timezone": timezone
+    }
 
 
 class DetailSerializer(serializers.Serializer):
@@ -35,5 +51,5 @@ class PasswordsSerializer(serializers.ModelSerializer):
     def get_password(self, password: Password) -> str:
         return get_decrypted_password(self.context["request"].session["cryptographic_key"], password.password)
 
-    def get_time_added(self, password: Password) -> str:
-        return str(password.time_added)
+    def get_time_added(self, password: Password) -> Dict:
+        return datetime_to_timezone(password.time_added, self.context["request"].user.timezone)

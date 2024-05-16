@@ -81,5 +81,6 @@ def validate_2fa_code(session: SessionBase, data: Mapping) -> User | None:
     if session.get("2fa_code", 0) == data.get("code", 1):
         pk = session["2fa_code_user_id"]
         session.flush()
+        session.set_expiry(0)
         return get_object_or_404(User, pk=pk)
     return None
