@@ -9,6 +9,7 @@
 
 import os
 from pathlib import Path
+import datetime
 
 from environ import Env
 
@@ -148,27 +149,29 @@ CACHES = {
     }
 }
 
+DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"
+ALL_USER_PASSWORDS_CACHE_NAME = "passwords"
+
 # REST FRAMEWORK
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'api.authentication.ExpiringTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication'
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 20,
 }
 
+TOKEN_TTL = datetime.timedelta(hours=1)
+
 # dj-rest-auth
 REST_AUTH = {
     "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer",
     "OLD_PASSWORD_FIELD_ENABLED": True
 }
-
-DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"
-ALL_USER_PASSWORDS_CACHE_NAME = "passwords"
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
