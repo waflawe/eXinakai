@@ -165,7 +165,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
-TOKEN_TTL = datetime.timedelta(hours=1)
+TOKEN_TTL = datetime.timedelta(hours=int(env("DJANGO_TOKEN_TTL")))
 
 # dj-rest-auth
 REST_AUTH = {
