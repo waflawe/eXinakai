@@ -19,5 +19,6 @@ class ExpiringTokenAuthentication(TokenAuthentication):
                 "detail": "Токен уже не действителен.",
                 "code": "TOKEN_EXPIRED"
             }).data
+            token.delete()
             raise AuthenticationFailed(data)
         return user, token

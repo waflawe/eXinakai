@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
+from users.tasks import make_center_crop, send_change_account_email_mail_message
 
 User = get_user_model()
 
@@ -27,19 +28,6 @@ def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str) -> None 
     )):
         raise Http404
     return None
-
-
-def get_upload_crop_path(path: str) -> str:
-    """ Функция для получения пути к центрированному изображению по пути исходного. """
-
-    if path == settings.DEFAULT_USER_AVATAR_PATH:
-        return path
-
-    splitted_path = path.split("/")
-    filename = splitted_path.pop()
-    name, extension = filename.rsplit(".", 1)
-    splitted_path.append(f"{name}_crop.{extension}")
-    return "/".join(splitted_path)
 
 
 class CryptographicKeyEmptyRequiredMixin(AccessMixin):
@@ -84,3 +72,10 @@ def validate_2fa_code(session: SessionBase, data: Mapping) -> User | None:
         session.set_expiry(0)
         return get_object_or_404(User, pk=pk)
     return None
+
+
+def process_avatar_and_email_if_updated(user: User, old_avatar_path: str, old_email: str) -> None:
+    if str(user.avatar) != old_avatar_path:
+        make_center_crop.delay(str(user.avatar))
+    if user.email != old_email:
+        send_change_account_email_mail_message.delay(user.email)

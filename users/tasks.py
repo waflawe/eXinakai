@@ -11,7 +11,7 @@ from django.utils.html import strip_tags
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
-from users.services import get_upload_crop_path
+from users.templatetags.crop_user_avatar import get_upload_crop_path
 
 User = get_user_model()
 

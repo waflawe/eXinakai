@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional, Tuple, Mapping, KeysView
+from typing import KeysView, Mapping, NamedTuple, Optional, Tuple
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -51,7 +51,7 @@ def get_decrypted_password(cryptographic_key: str, password: str) -> str:
 
 def get_all_passwords(
         user: User,
-        search: Optional[bool] = None,
+        search: Optional[str] = None,
         *,
         to_tuple: Optional[bool] = True,
         cryptographic_key: Optional[str] = None

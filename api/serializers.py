@@ -1,9 +1,11 @@
-from rest_framework import serializers
+from datetime import datetime
+from typing import Dict, NoReturn, Optional, Type
+
+import pytz
 from dj_rest_auth.serializers import PasswordResetSerializer as PasswordResetSerializerCore
 from django.contrib.auth import get_user_model
-from datetime import datetime
-from typing import Dict, Optional
-import pytz
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from exinakai.models import Password
 from exinakai.services import get_decrypted_password
@@ -50,8 +52,24 @@ class PasswordResetSerializer(PasswordResetSerializerCore):
         }
 
     @property
-    def password_reset_form_class(self):
+    def password_reset_form_class(self) -> Type[PasswordResetForm]:
         return PasswordResetForm
+
+
+class SettingsSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False)
+    avatar = serializers.ImageField(required=False)
+    is_2fa_enabled = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = User
+        fields = "username", "email", "avatar", "timezone", "is_2fa_enabled"
+        read_only_fields = ("username",)
+
+    def validate_timezone(self, timezone: str) -> str | NoReturn:
+        if timezone not in pytz.common_timezones:
+            raise ValidationError("Переданная временная зона не валидна.", code="INVALID_TIMEZONE")
+        return timezone
 
 
 class PasswordsSerializer(serializers.ModelSerializer):

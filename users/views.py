@@ -25,16 +25,16 @@ from users.services import (
     SetSessionCryptographicKeyService,
     check_is_redirect_url_valid,
     generate_cryptographic_key,
-    get_upload_crop_path,
     make_2fa_authentication,
+    process_avatar_and_email_if_updated,
     validate_2fa_code,
 )
 from users.tasks import (
-    make_center_crop,
     send_2fa_code_mail_message,
     send_change_account_email_mail_message,
     send_change_account_password_mail_message,
 )
+from users.templatetags.crop_user_avatar import get_upload_crop_path
 
 User = get_user_model()
 
@@ -198,7 +198,7 @@ class SettingsView(LoginRequiredMixin, View):
         if form.is_valid():
             self.check_is_timezone_and_email_updated(form.instance, old_timezone, old_email)
             form.instance.save(update_fields=["email", "avatar", "timezone", "is_2fa_enabled"])
-            self.process_avatar_and_email_if_updated(form.instance, old_avatar_path, old_email)
+            process_avatar_and_email_if_updated(form.instance, old_avatar_path, old_email)
             return redirect(f"{reverse('accounts:settings')}?action=settings-updated")
         return self.get(request, request.POST)
 
@@ -207,9 +207,3 @@ class SettingsView(LoginRequiredMixin, View):
             user.timezone = old_timezone
         if user.email == "":
             user.email = old_email
-
-    def process_avatar_and_email_if_updated(self, user: User, old_avatar_path: str, old_email: str) -> None:
-        if str(user.avatar) != old_avatar_path:
-            make_center_crop.delay(str(user.avatar))
-        if user.email != old_email:
-            send_change_account_email_mail_message.delay(user.email)

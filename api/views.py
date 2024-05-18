@@ -1,3 +1,6 @@
+from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
+from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
+from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from rest_framework import mixins, permissions, status, viewsets
@@ -6,11 +9,6 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from dj_rest_auth.views import (
-    PasswordResetView as PasswordResetViewCore,
-    PasswordResetConfirmView as PasswordResetConfirmViewCore,
-    PasswordChangeView as PasswordChangeViewCore
-)
 
 from api.permissions import IsUserCryptographicKeyValid
 from api.serializers import (
@@ -19,14 +17,25 @@ from api.serializers import (
     DetailedCodeSerializer,
     DetailSerializer,
     PasswordsSerializer,
+    RandomPasswordSerializer,
+    SettingsSerializer,
     TwoFactorAuthenticationCodeSerializer,
-    RandomPasswordSerializer
 )
-from exinakai.services import encrypt_and_save_password, get_all_passwords, generate_random_password_from_request
-from users.services import SetSessionCryptographicKeyService, make_2fa_authentication, validate_2fa_code
+from exinakai.services import encrypt_and_save_password, generate_random_password_from_request, get_all_passwords
+from users.services import (
+    SetSessionCryptographicKeyService,
+    make_2fa_authentication,
+    process_avatar_and_email_if_updated,
+    validate_2fa_code,
+)
 from users.tasks import send_2fa_code_mail_message, send_change_account_password_mail_message
 
 User = get_user_model()
+
+
+#########
+# USERS #
+#########
 
 
 class UserLoginAPIView(ObtainAuthToken):
@@ -97,7 +106,7 @@ class UserLogoutAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class PasswordResetView(PasswordResetViewCore):
+class PasswordResetAPIView(PasswordResetViewCore):
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         data = DetailedCodeSerializer({
@@ -113,17 +122,41 @@ class SuccessChangePasswordResponseMixin(object):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class PasswordResetConfirmView(SuccessChangePasswordResponseMixin, PasswordResetConfirmViewCore):
+class PasswordResetConfirmAPIView(SuccessChangePasswordResponseMixin, PasswordResetConfirmViewCore):
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         return self.get_response()
 
 
-class PasswordChangeView(SuccessChangePasswordResponseMixin, PasswordChangeViewCore):
+class PasswordChangeAPIView(SuccessChangePasswordResponseMixin, PasswordChangeViewCore):
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         send_change_account_password_mail_message.delay(request.user.email, None)
         return self.get_response()
+
+
+class UpdateSettingsAPIView(APIView):
+    serializer_class = SettingsSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        old_avatar_path, old_email = str(request.user.avatar), request.user.email
+        serializer = self.serializer_class(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data["is_2fa_enabled"] = request.data.get("is_2fa_enabled", request.user.is_2fa_enabled)
+        serializer.save()
+        process_avatar_and_email_if_updated(request.user, old_avatar_path, old_email)
+        data = DetailSerializer({"detail": "Обновлено успешно."}).data
+        return Response(data, status=status.HTTP_200_OK)
+
+
+############
+# EXINAKAI #
+############
 
 
 class PasswordViewSet(

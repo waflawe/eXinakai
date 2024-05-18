@@ -13,8 +13,8 @@ from exinakai.services import (
     check_user_perms_to_edit_password,
     delete_password,
     encrypt_and_save_password,
+    generate_random_password_from_request,
     get_all_passwords,
-    generate_random_password_from_request
 )
 
 
