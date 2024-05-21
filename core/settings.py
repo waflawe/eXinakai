@@ -178,7 +178,7 @@ REST_AUTH = {
 # drf-spectacular
 SPECTACULAR_SETTINGS = {
     'TITLE': 'eXinakai',
-    'DESCRIPTION': 'Простой и функциональный онлайн менеджер паролей.',
+    'DESCRIPTION': 'Простой, минималистичный и функциональный онлайн менеджер паролей.',
     'VERSION': '1.1.0',
 }
 
