@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
+    "drf_spectacular",
 
     "exinakai.apps.ExinakaiConfig",
     "users.apps.UsersConfig",
@@ -161,6 +162,7 @@ REST_FRAMEWORK = {
         'api.authentication.ExpiringTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication'
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 20,
 }
@@ -171,6 +173,13 @@ TOKEN_TTL = datetime.timedelta(hours=int(env("DJANGO_TOKEN_TTL")))
 REST_AUTH = {
     "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer",
     "OLD_PASSWORD_FIELD_ENABLED": True
+}
+
+# drf-spectacular
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'eXinakai',
+    'DESCRIPTION': 'Простой и функциональный онлайн менеджер паролей.',
+    'VERSION': '1.1.0',
 }
 
 # Internationalization

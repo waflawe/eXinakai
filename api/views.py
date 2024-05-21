@@ -1,6 +1,12 @@
 from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
 from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
 from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
+from dj_rest_auth.serializers import (
+    LoginSerializer,
+    PasswordResetSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordChangeSerializer,
+)
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from rest_framework import mixins, permissions, status, viewsets
@@ -9,6 +15,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from api.permissions import IsUserCryptographicKeyValid
 from api.serializers import (
@@ -41,6 +48,11 @@ User = get_user_model()
 class UserLoginAPIView(ObtainAuthToken):
     authentication_classes = ()
 
+    @extend_schema(request=LoginSerializer, responses={
+        status.HTTP_200_OK: AuthTokenSerializer,
+        status.HTTP_202_ACCEPTED: DetailedCodeSerializer,
+        status.HTTP_400_BAD_REQUEST: None
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -62,6 +74,10 @@ class UserTwoFactorAuthenticationAPIView(APIView):
     serializer_class = TwoFactorAuthenticationCodeSerializer
     authentication_classes = ()
 
+    @extend_schema(request=TwoFactorAuthenticationCodeSerializer, responses={
+        status.HTTP_200_OK: AuthTokenSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailedCodeSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -81,6 +97,10 @@ class ActivateCryptographicKeyAPIView(APIView):
     serializer_class = CryptographicKeySerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(request=CryptographicKeySerializer, responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailedCodeSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -98,6 +118,10 @@ class ActivateCryptographicKeyAPIView(APIView):
 class UserLogoutAPIView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(request=None, responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_401_UNAUTHORIZED: DetailSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         token = Token.objects.get(user=request.user)
         token.delete()
@@ -107,6 +131,9 @@ class UserLogoutAPIView(APIView):
 
 
 class PasswordResetAPIView(PasswordResetViewCore):
+    @extend_schema(request=PasswordResetSerializer, responses={
+        status.HTTP_202_ACCEPTED: DetailedCodeSerializer,
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         data = DetailedCodeSerializer({
@@ -123,12 +150,19 @@ class SuccessChangePasswordResponseMixin(object):
 
 
 class PasswordResetConfirmAPIView(SuccessChangePasswordResponseMixin, PasswordResetConfirmViewCore):
+    @extend_schema(request=PasswordResetConfirmSerializer, responses={
+        status.HTTP_200_OK: DetailSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         return self.get_response()
 
 
 class PasswordChangeAPIView(SuccessChangePasswordResponseMixin, PasswordChangeViewCore):
+    @extend_schema(request=PasswordChangeSerializer, responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         super().post(request, *args, **kwargs)
         send_change_account_password_mail_message.delay(request.user.email, None)
@@ -139,10 +173,17 @@ class UpdateSettingsAPIView(APIView):
     serializer_class = SettingsSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(responses={
+        status.HTTP_200_OK: SettingsSerializer
+    })
     def get(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.serializer_class(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(request=SettingsSerializer, responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailSerializer
+    })
     def post(self, request: Request, *args, **kwargs) -> Response:
         old_avatar_path, old_email = str(request.user.avatar), request.user.email
         serializer = self.serializer_class(request.user, data=request.data)
@@ -159,6 +200,11 @@ class UpdateSettingsAPIView(APIView):
 ############
 
 
+@extend_schema_view(
+    get=extend_schema(responses={
+        status.HTTP_200_OK: PasswordsSerializer
+    })
+)
 class PasswordViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -172,6 +218,10 @@ class PasswordViewSet(
     def get_queryset(self) -> QuerySet:
         return get_all_passwords(self.request.user, self.request.GET.get("search", None), to_tuple=False)
 
+    @extend_schema(request=PasswordsSerializer, responses={
+        status.HTTP_201_CREATED: DetailSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailSerializer
+    })
     def create(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -184,6 +234,10 @@ class PasswordViewSet(
         password, note = serializer.initial_data["password"], serializer.initial_data["note"]
         encrypt_and_save_password(self.request.user, cryptographic_key, password, note)
 
+    @extend_schema(responses={
+        status.HTTP_204_NO_CONTENT: DetailSerializer,
+        status.HTTP_404_NOT_FOUND: DetailSerializer
+    })
     def destroy(self, request: Request, *args, **kwargs) -> Response:
         super().destroy(request, *args, **kwargs)
         data = DetailSerializer({"detail": "Пароль удален успешно."}).data
@@ -191,9 +245,13 @@ class PasswordViewSet(
 
 
 class GeneratePasswordAPIView(APIView):
+    serializer_class = RandomPasswordSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    @extend_schema(responses={
+        status.HTTP_200_OK: RandomPasswordSerializer
+    })
     def get(self, request: Request) -> Response:
-        password, *_ = generate_random_password_from_request(request.GET)
-        data = RandomPasswordSerializer({"password": password}).data
+        password, *_ = generate_random_password_from_request(request.query_params)
+        data = self.serializer_class({"password": password}).data
         return Response(data, status=status.HTTP_200_OK)
