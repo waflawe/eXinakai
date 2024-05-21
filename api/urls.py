@@ -1,6 +1,6 @@
 from django.urls import include, path
-from rest_framework.routers import SimpleRouter
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework.routers import SimpleRouter
 
 from api.views import (
     ActivateCryptographicKeyAPIView,

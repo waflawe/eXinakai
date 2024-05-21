@@ -1,21 +1,21 @@
+from dj_rest_auth.serializers import (
+    LoginSerializer,
+    PasswordChangeSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetSerializer,
+)
 from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
 from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
 from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
-from dj_rest_auth.serializers import (
-    LoginSerializer,
-    PasswordResetSerializer,
-    PasswordResetConfirmSerializer,
-    PasswordChangeSerializer,
-)
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from api.permissions import IsUserCryptographicKeyValid
 from api.serializers import (
