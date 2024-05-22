@@ -25,7 +25,17 @@ def send_reset_password_mail(
         to_email: str,
         html_email_template_name: Optional[str] = None
 ) -> None:
-    """Sending an email to reset your account password."""
+    """
+    Sending an email to reset your account password.
+
+    :param subject_template_name: HTML with the subject line of the email.
+    :param email_template_name: HTML with the body of the email.
+    :param context: Context for the body of the letter.
+    :param from_email: The sender of the letter.
+    :param to_email: Recipient of the letter.
+    :param html_email_template_name: ???
+    :return: None.
+    """
 
     context['user'] = User.objects.get(pk=context['user'])
 
@@ -37,16 +47,23 @@ def send_reset_password_mail(
         to_email,
         html_email_template_name
     )
+    return
 
 
 @shared_task
 def make_center_crop(avatar_path: str) -> None:
-    """Avatar centering."""
+    """
+    Avatar centering.
+
+    :param avatar_path: Path to the original avatar.
+    :return: None.
+    """
 
     image_full_path = str(settings.BASE_DIR / settings.MEDIA_ROOT / avatar_path)
     image = open_image(os.path.join(image_full_path))
     new_crop_image_path = str(settings.BASE_DIR / settings.MEDIA_ROOT / get_upload_crop_path(avatar_path))
     _center_crop(image).save(new_crop_image_path)
+    return
 
 
 def _center_crop(img: Image) -> Image:
@@ -68,7 +85,15 @@ def send_mail_with_subject_and_body_as_html(
         recipient_mail: str,
         context: Optional[Dict] = None
 ) -> None:
-    """Send email to mail with body and header from html files."""
+    """
+    Send email to mail with body and header from html files.
+
+    :param subject_template: HTML with the subject line of the email.
+    :param body_template: HTML with the body of the email.
+    :param recipient_mail: Recipient of the letter.
+    :param context: Context for the body of the letter.
+    :return: None.
+    """
 
     subject = render_to_string(subject_template)
     html_message = render_to_string(body_template, context)
@@ -82,6 +107,7 @@ def send_mail_with_subject_and_body_as_html(
         fail_silently=True,
         html_message=html_message
     )
+    return
 
 
 @shared_task

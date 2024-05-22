@@ -240,7 +240,7 @@ class PasswordViewSet(
     serializer_class = PasswordsSerializer
 
     def get_queryset(self) -> QuerySet:
-        return get_all_passwords(self.request.user, self.request.GET.get("search", None), to_tuple=False)
+        return get_all_passwords(self.request.user, self.request.GET.get("search", None), decrypt=False)
 
     @extend_schema(request=PasswordsSerializer, responses={
         status.HTTP_201_CREATED: DetailSerializer,

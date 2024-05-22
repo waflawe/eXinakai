@@ -37,7 +37,15 @@ class PasswordRender(NamedTuple):
 
 
 def encrypt_and_save_password(user: User, cryptographic_key: str, password: str, note: str) -> None:
-    """Service for encrypting and saving the password to the database."""
+    """
+    Service for encrypting and saving the password to the database.
+
+    :param user: The user to whom the password is attached.
+    :param cryptographic_key: The key with which the password will be encrypted.
+    :param password: Password for encryption and saving.
+    :param note: Password note.
+    :return: None.
+    """
 
     fernet = Fernet(bytes(cryptographic_key, "utf-8"))
     encrypted_password = fernet.encrypt(bytes(password, "utf-8")).decode("utf-8")
@@ -48,7 +56,13 @@ def encrypt_and_save_password(user: User, cryptographic_key: str, password: str,
 
 
 def get_decrypted_password(cryptographic_key: str, password: str) -> str:
-    """Password decryption service."""
+    """
+    Password decryption service.
+
+    :param cryptographic_key: The key to decrypt the password.
+    :param password: Password for decryption.
+    :return: Decrypted password.
+    """
 
     try:
         fernet = Fernet(bytes(cryptographic_key, "utf-8"))
@@ -61,10 +75,18 @@ def get_all_passwords(
         user: User,
         search: Optional[str] = None,
         *,
-        to_tuple: Optional[bool] = True,
+        decrypt: Optional[bool] = True,
         cryptographic_key: Optional[str] = None
 ) -> Tuple[PasswordRender, ...] | QuerySet:
-    """A service to retrieve all saved user passwords."""
+    """
+    A service to retrieve all saved user passwords.
+
+    :param user: The user whose passwords are to be collected.
+    :param search: Search query on password notes.
+    :param decrypt: Whether passwords need to be decrypted.
+    :param cryptographic_key: The key to decrypt passwords, if you need it.
+    :return: QuerySet of encrypted passwords or Tuple of decrypted passwords.
+    """
 
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     queryset = cache.get(key=key)
@@ -75,7 +97,7 @@ def get_all_passwords(
     if search:
         queryset = queryset.filter(note__icontains=search)
 
-    if to_tuple:
+    if decrypt:
         return tuple(
             PasswordRender(password, get_decrypted_password(cryptographic_key, password.password))
             for password in queryset
@@ -87,7 +109,13 @@ def get_password(**kwargs) -> Password: return Password.storable.get(**kwargs)
 
 
 def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
-    """Service for checking user's rights to change password."""
+    """
+    Service for checking user's rights to change password.
+
+    :param user: User to verify permissions.
+    :param kwargs: Password identifiers (like pk, note, and others).
+    :return: Password whose permissions to change have been checked or PermissionDenied error.
+    """
 
     password = get_password(**kwargs)
     if not password.owner == user:
@@ -96,7 +124,13 @@ def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
 
 
 def delete_password(user: User, **kwargs) -> None:
-    """Service for deleting passwords from the database."""
+    """
+    Service for deleting passwords from the database.
+
+    :param user: User to verify permissions.
+    :param kwargs: Password identifiers (like pk, note, and others).
+    :return: None.
+    """
 
     password = check_user_perms_to_edit_password(user, **kwargs)
     password.delete()
@@ -106,7 +140,14 @@ def delete_password(user: User, **kwargs) -> None:
 
 
 def generate_random_password_from_request_data(request_data: Mapping) -> tuple[str, KeysView, int]:
-    """Service for random password generation according to user filters."""
+    """
+    Service for random password generation according to user filters.
+
+    :param request_data: Ready password information from request (request.GET for django.http.request.HttpRequest
+    and request.query_params for rest_framework.request.Request)
+    :return: Tuple of the generated password, the characters used in the generation,
+    and the length of the generated password.
+    """
 
     default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
     submited_sumbols = request_data.keys()

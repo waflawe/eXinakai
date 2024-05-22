@@ -29,7 +29,13 @@ class CryptographicKeyEmptyRequiredMixin(AccessMixin):
 class SetSessionCryptographicKeyService(object):
     @staticmethod
     def is_key_valid(user: User, cryptographic_key: str) -> bool:
-        """Checking the encryption key for validity."""
+        """
+        Checking the encryption key for validity.
+
+        :param user: The user to whom the key is checked for validity.
+        :param cryptographic_key: Key to check for validity.
+        :return: Is the key valid.
+        """
 
         password = Password.storable.filter(owner=user).only("password").first()
         if password:
@@ -45,7 +51,13 @@ class SetSessionCryptographicKeyService(object):
 
 
 def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str) -> None | NoReturn:
-    """A service to check if a request redirect matches one of the collection."""
+    """
+    A service to check if a request redirect matches one of the collection.
+
+    :param request: django.http.request.HttpRequest object.
+    :param valid_urls: A set of valid referers.
+    :return: None if redirect url valid else Http404 error.
+    """
 
     is_requests_hosts_equal = request.get_host() in request.META.get("HTTP_REFERER", "")
     referer = (request.META.get("HTTP_REFERER", "")
@@ -64,7 +76,13 @@ def generate_cryptographic_key() -> str:
 
 
 def make_2fa_authentication(session: SessionBase, user: User) -> str:
-    """A service for creating and assigning a 2FA code to a user."""
+    """
+    A service for creating and assigning a 2FA code to a user.
+
+    :param session: Session undergoing verification.
+    :param user: Target user to log in.
+    :return: Generated code for 2FA.
+    """
 
     code = "".join(secrets.choice(string.digits) for _ in range(6))
     session["2fa_code"] = code
@@ -74,7 +92,13 @@ def make_2fa_authentication(session: SessionBase, user: User) -> str:
 
 
 def validate_2fa_code(session: SessionBase, data: Mapping) -> User | None:
-    """Service to check 2FA code for validity."""
+    """
+    Service to check 2FA code for validity.
+
+    :param session: Session undergoing verification
+    :param data: Received dataset from a user with the code 2FA.
+    :return: User for login or None if the 2FA code is invalid.
+    """
 
     if session.get("2fa_code", 0) == data.get("code", 1):
         pk = session["2fa_code_user_id"]
@@ -85,9 +109,17 @@ def validate_2fa_code(session: SessionBase, data: Mapping) -> User | None:
 
 
 def process_avatar_and_email_if_updated(user: User, old_avatar_path: str, old_email: str) -> None:
-    """Service to recall the corresponding tasks for avatar and mail if they have been changed."""
+    """
+    Service to recall the corresponding tasks for avatar and mail if they have been changed.
+
+    :param user: The user who changed the settings.
+    :param old_avatar_path: Path to the user's old avatar.
+    :param old_email: User's old email.
+    :return: None.
+    """
 
     if str(user.avatar) != old_avatar_path:
         make_center_crop.delay(str(user.avatar))
     if user.email != old_email:
         send_change_account_email_mail_message.delay(user.email)
+    return
