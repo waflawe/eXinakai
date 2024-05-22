@@ -13,7 +13,7 @@ from exinakai.services import (
     check_user_perms_to_edit_password,
     delete_password,
     encrypt_and_save_password,
-    generate_random_password_from_request,
+    generate_random_password_from_request_data,
     get_all_passwords,
 )
 
@@ -82,7 +82,7 @@ class GeneratePasswordView(TemplateView):
     def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
 
-        random_password, submited_sumbols, length = generate_random_password_from_request(self.request.GET)
+        random_password, submited_sumbols, length = generate_random_password_from_request_data(self.request.GET)
         context["random_password"] = random_password
         context["submited_sumbols"] = submited_sumbols
         context["length"] = length

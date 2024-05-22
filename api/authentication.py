@@ -8,11 +8,14 @@ from api.serializers import DetailedCodeSerializer
 
 
 class ExpiringTokenAuthentication(TokenAuthentication):
+    """
+    Class of authentication by expiring token. Token validity period
+    is defined by the settings.TOKEN_TTL variable.
+    """
+
     def authenticate_credentials(self, key: str):
         user, token = super().authenticate_credentials(key)
-
-        utc_now = timezone.now()
-        utc_now = utc_now.replace(tzinfo=pytz.utc)
+        utc_now = timezone.now().replace(tzinfo=pytz.utc)
 
         if token.created < utc_now - settings.TOKEN_TTL:
             data = DetailedCodeSerializer({

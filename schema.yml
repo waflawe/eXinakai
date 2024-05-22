@@ -2,11 +2,12 @@ openapi: 3.0.3
 info:
   title: eXinakai
   version: 1.1.0
-  description: Your project description
+  description: Простой, минималистичный и функциональный онлайн менеджер паролей.
 paths:
   /api/v1/generate/password/:
     get:
       operationId: generate_password_retrieve
+      description: Random password generation.
       tags:
       - generate
       security:
@@ -22,6 +23,7 @@ paths:
   /api/v1/key/activate/:
     post:
       operationId: key_activate_create
+      description: Activation of the encryption key.
       tags:
       - key
       requestBody:
@@ -55,11 +57,7 @@ paths:
   /api/v1/password/change/:
     post:
       operationId: password_change_create
-      description: |-
-        Calls Django Auth SetPasswordForm save method.
-
-        Accepts the following POST parameters: new_password1, new_password2
-        Returns the success/fail message.
+      description: Changing the account password.
       tags:
       - password
       requestBody:
@@ -93,11 +91,7 @@ paths:
   /api/v1/password/reset/:
     post:
       operationId: password_reset_create
-      description: |-
-        Calls Django Auth PasswordResetForm save method.
-
-        Accepts the following POST parameters: email
-        Returns the success/fail message.
+      description: Account password reset.
       tags:
       - password
       requestBody:
@@ -126,13 +120,7 @@ paths:
   /api/v1/password/reset/confirm/:
     post:
       operationId: password_reset_confirm_create
-      description: |-
-        Password reset e-mail link is confirmed, therefore
-        this resets the user's password.
-
-        Accepts the following POST parameters: token, uid,
-            new_password1, new_password2
-        Returns the success/fail message.
+      description: Account password reset confirmation.
       tags:
       - password
       requestBody:
@@ -161,6 +149,7 @@ paths:
   /api/v1/passwords/:
     get:
       operationId: passwords_list
+      description: View all saved passwords.
       parameters:
       - name: limit
         required: false
@@ -188,6 +177,7 @@ paths:
           description: ''
     post:
       operationId: passwords_create
+      description: Saves the new password to the database.
       tags:
       - passwords
       requestBody:
@@ -221,6 +211,7 @@ paths:
   /api/v1/passwords/{id}/:
     delete:
       operationId: passwords_destroy
+      description: Deleting a password from the database.
       parameters:
       - in: path
         name: id
@@ -245,9 +236,156 @@ paths:
               schema:
                 $ref: '#/components/schemas/Detail'
           description: ''
+  /api/v1/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/settings/:
     get:
       operationId: settings_retrieve
+      description: View and change account settings.
       tags:
       - settings
       security:
@@ -262,6 +400,7 @@ paths:
           description: ''
     post:
       operationId: settings_create
+      description: View and change account settings.
       tags:
       - settings
       requestBody:
@@ -294,6 +433,7 @@ paths:
   /api/v1/token/2fa/:
     post:
       operationId: token_2fa_create
+      description: Log in to your account with two-step authentication enabled.
       tags:
       - token
       requestBody:
@@ -326,19 +466,20 @@ paths:
   /api/v1/token/login/:
     post:
       operationId: token_login_create
+      description: Account login by token.
       tags:
       - token
       requestBody:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Login'
+              $ref: '#/components/schemas/AuthToken'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Login'
+              $ref: '#/components/schemas/AuthToken'
           application/json:
             schema:
-              $ref: '#/components/schemas/Login'
+              $ref: '#/components/schemas/AuthToken'
         required: true
       responses:
         '200':
@@ -358,6 +499,7 @@ paths:
   /api/v1/token/logout/:
     post:
       operationId: token_logout_create
+      description: Logging out of the account.
       tags:
       - token
       security:
@@ -411,18 +553,6 @@ components:
       required:
       - code
       - detail
-    Login:
-      type: object
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-      required:
-      - password
     PaginatedPasswordsList:
       type: object
       required:

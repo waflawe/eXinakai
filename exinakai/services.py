@@ -18,6 +18,8 @@ User = get_user_model()
 
 
 class CryptographicKeyRequiredMixin(AccessMixin):
+    """Mixin that verifies that the user has a password decryption key."""
+
     def handle_no_permission(self) -> HttpResponseRedirect:
         return redirect(reverse("accounts:activate-cryptographic-key"))
 
@@ -28,11 +30,15 @@ class CryptographicKeyRequiredMixin(AccessMixin):
 
 
 class PasswordRender(NamedTuple):
+    """Data structure for storing the password in a render-ready form."""
+
     password: Password
     decrypted_password: str
 
 
 def encrypt_and_save_password(user: User, cryptographic_key: str, password: str, note: str) -> None:
+    """Service for encrypting and saving the password to the database."""
+
     fernet = Fernet(bytes(cryptographic_key, "utf-8"))
     encrypted_password = fernet.encrypt(bytes(password, "utf-8")).decode("utf-8")
     Password.storable.create(owner=user, note=note, password=encrypted_password)
@@ -42,6 +48,8 @@ def encrypt_and_save_password(user: User, cryptographic_key: str, password: str,
 
 
 def get_decrypted_password(cryptographic_key: str, password: str) -> str:
+    """Password decryption service."""
+
     try:
         fernet = Fernet(bytes(cryptographic_key, "utf-8"))
     except ValueError:
@@ -56,6 +64,8 @@ def get_all_passwords(
         to_tuple: Optional[bool] = True,
         cryptographic_key: Optional[str] = None
 ) -> Tuple[PasswordRender, ...] | QuerySet:
+    """A service to retrieve all saved user passwords."""
+
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     queryset = cache.get(key=key)
 
@@ -73,11 +83,12 @@ def get_all_passwords(
     return queryset
 
 
-def get_password(**kwargs) -> Password:
-    return Password.storable.get(**kwargs)
+def get_password(**kwargs) -> Password: return Password.storable.get(**kwargs)
 
 
 def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
+    """Service for checking user's rights to change password."""
+
     password = get_password(**kwargs)
     if not password.owner == user:
         raise PermissionDenied("Вы не можете редактировать этот пароль.")
@@ -85,6 +96,8 @@ def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
 
 
 def delete_password(user: User, **kwargs) -> None:
+    """Service for deleting passwords from the database."""
+
     password = check_user_perms_to_edit_password(user, **kwargs)
     password.delete()
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
@@ -92,7 +105,9 @@ def delete_password(user: User, **kwargs) -> None:
     return
 
 
-def generate_random_password_from_request(request_data: Mapping) -> tuple[str, KeysView, int]:
+def generate_random_password_from_request_data(request_data: Mapping) -> tuple[str, KeysView, int]:
+    """Service for random password generation according to user filters."""
+
     default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
     submited_sumbols = request_data.keys()
     characters = "".join(alias for alias, sumbols in default_characters.items() if sumbols in submited_sumbols)

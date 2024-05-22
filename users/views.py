@@ -179,10 +179,12 @@ class SettingsView(LoginRequiredMixin, View):
 
     def get(self, request: HttpRequest, data: Optional[Dict] = None) -> HttpResponse:
         form = UpdateSettingsForm(data)
+
         if not data:
             form.fields["email"].widget = TextInput(attrs={"placeholder": request.user.email})
             is_2fa_enabled_attrs = {"checked": ""} if request.user.is_2fa_enabled else {}
             form.fields["is_2fa_enabled"].widget = CheckboxInput(attrs=is_2fa_enabled_attrs)
+
         context = {
             "form": form,
             "user_avatar": get_upload_crop_path(str(request.user.avatar)),

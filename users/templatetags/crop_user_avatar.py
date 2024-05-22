@@ -6,15 +6,8 @@ User = get_user_model()
 register = template.Library()
 
 
-def get_crop_user_avatar(user: User) -> str:
-    return get_upload_crop_path(str(user.avatar))
-
-
-register.filter("get_crop_user_avatar", get_crop_user_avatar)
-
-
 def get_upload_crop_path(path: str) -> str:
-    """ Функция для получения пути к центрированному изображению по пути исходного. """
+    """Function to get the path to a centered image from the path of the original image."""
 
     if path == settings.DEFAULT_USER_AVATAR_PATH:
         return path
@@ -24,3 +17,10 @@ def get_upload_crop_path(path: str) -> str:
     name, extension = filename.rsplit(".", 1)
     splitted_path.append(f"{name}_crop.{extension}")
     return "/".join(splitted_path)
+
+
+def get_crop_user_avatar(user: User) -> str:
+    return get_upload_crop_path(str(user.avatar))
+
+
+register.filter("get_crop_user_avatar", get_crop_user_avatar)

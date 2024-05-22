@@ -25,6 +25,8 @@ def send_reset_password_mail(
         to_email: str,
         html_email_template_name: Optional[str] = None
 ) -> None:
+    """Sending an email to reset your account password."""
+
     context['user'] = User.objects.get(pk=context['user'])
 
     PasswordResetForm().send_mail(
@@ -39,7 +41,7 @@ def send_reset_password_mail(
 
 @shared_task
 def make_center_crop(avatar_path: str) -> None:
-    """ Таска для центрирования аватарки/вложения. """
+    """Avatar centering."""
 
     image_full_path = str(settings.BASE_DIR / settings.MEDIA_ROOT / avatar_path)
     image = open_image(os.path.join(image_full_path))
@@ -60,12 +62,14 @@ def _center_crop(img: Image) -> Image:
     return img.crop((int(left), int(top), int(right), int(bottom)))
 
 
-def send_mail_with_subject_and_body_html(
+def send_mail_with_subject_and_body_as_html(
         subject_template: str,
         body_template: str,
         recipient_mail: str,
         context: Optional[Dict] = None
 ) -> None:
+    """Send email to mail with body and header from html files."""
+
     subject = render_to_string(subject_template)
     html_message = render_to_string(body_template, context)
     plain_message = strip_tags(html_message)
@@ -82,7 +86,7 @@ def send_mail_with_subject_and_body_html(
 
 @shared_task
 def send_change_account_email_mail_message(email: str) -> None:
-    send_mail_with_subject_and_body_html(
+    send_mail_with_subject_and_body_as_html(
         'users/mails/change_account_email_subject.html',
         'users/mails/change_account_email_message.html',
         email,
@@ -92,7 +96,7 @@ def send_change_account_email_mail_message(email: str) -> None:
 
 @shared_task
 def send_2fa_code_mail_message(email: str, code: int) -> None:
-    send_mail_with_subject_and_body_html(
+    send_mail_with_subject_and_body_as_html(
         "users/mails/2fa_code_email_subject.html",
         "users/mails/2fa_code_email_message.html",
         email,
@@ -102,7 +106,7 @@ def send_2fa_code_mail_message(email: str, code: int) -> None:
 
 @shared_task
 def send_change_account_password_mail_message(email: str, domain: str | None) -> None:
-    send_mail_with_subject_and_body_html(
+    send_mail_with_subject_and_body_as_html(
         "users/mails/change_account_password_subject.html",
         "users/mails/change_account_password_message.html",
         email,
