@@ -34,7 +34,7 @@ cd eXinakai/
 ### Run in local development mode <a name="run-in-local-development-mode"></a>
 1. Install requirements:
 ```cmd
-pip install requirements/dev.txt
+pip install -r requirements/dev.txt
 ```
 2. Create an .env file and fill it with the .env.template file, modifying the variables 
 marked with a comment if necessary.

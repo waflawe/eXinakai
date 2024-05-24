@@ -34,7 +34,7 @@ cd eXinakai/
 ### Запуск в режиме локальной разработки <a name="run-in-local-development-mode"></a>
 1. Установка зависимостей:
 ```cmd
-pip install requirements/dev.txt
+pip install -r requirements/dev.txt
 ```
 2. Создаем файл .env и заполняем его по примеру файла .env.template, при необходимости
 изменяя помеченные комментарием переменные.
