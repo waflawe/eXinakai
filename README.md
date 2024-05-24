@@ -1,12 +1,14 @@
 # eXinakai <a name="exinakai"></a>
 Простой, минималистичный и функциональный онлайн менеджер паролей, написанный на фреймворках 
-Django, Django REST Framework. Проект использует реляционную СУБД PostgreSQL в качестве основной базы данных, 
-библиотеку [celery](https://github.com/celery/celery) для работы с отложенными задачами, 
-нереляционную СУБД [Redis](https://github.com/redis/redis) в качестве брокера сообщений и для кэширования. 
-Также применяется библиотека [dj-rest-auth](https://github.com/iMerica/dj-rest-auth) для операций с аккаунтом 
+__[Django](https://github.com/django/django)__, 
+__[Django REST Framework](https://github.com/encode/django-rest-framework)__. Проект использует реляционную СУБД 
+__[PostgreSQL](https://github.com/postgres/postgres)__ в качестве основной базы данных, 
+библиотеку __[celery](https://github.com/celery/celery)__ для работы с отложенными задачами, 
+нереляционную СУБД __[Redis](https://github.com/redis/redis)__ в качестве брокера сообщений и для кэширования. 
+Также применяется библиотека __[dj-rest-auth](https://github.com/iMerica/dj-rest-auth)__ для операций с аккаунтом 
 через REST API, к которому также имеется Swagger-схема, сгенерированная при помощи 
-[drf-spectacular](https://github.com/tfranzel/drf-spectacular/). Программа докеризирована. 
-Используемый линтер и форматер кода - [ruff](https://github.com/astral-sh/ruff).
+__[drf-spectacular](https://github.com/tfranzel/drf-spectacular/)__. Программа __[Docker](https://github.com/docker/compose)__'изирована. 
+Используемый линтер и форматер кода - __[ruff](https://github.com/astral-sh/ruff)__.
 
 __[Documentation in English](https://github.com/waflawe/eXinakai/blob/main/README-en.md)__
 ## Карта контента <a name="table-of-contents"></a>
@@ -42,12 +44,10 @@ redis-server
 ```
 4. Во втором запускаем Celery:
 ```cmd
-source venv/bin/activate
 celery -A core.celery_setup:app worker --loglevel=info
 ```
 5. В третем запускаем проект:
 ```cmd
-source venv/bin/activate
 python manage.py runserver 0.0.0.0:8000
 ```
 6. Переходим в интернет-обозревателе на страницу [127.0.0.1:8000](http://127.0.0.1:8000/).

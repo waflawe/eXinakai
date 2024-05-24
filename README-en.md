@@ -1,12 +1,14 @@
 # eXinakai <a name="exinakai"></a>
-A simple, minimalistic and functional online password manager written on the frameworks of 
-Django, Django REST Framework. The project uses PostgreSQL relational DBMS as the main database, 
-library [celery](https://github.com/celery/celery) for working with pending tasks, 
-non-relational DBMS [Redis](https://github.com/redis/redis) as a message broker and for caching. 
-The library [dj-rest-auth](https://github.com/iMerica/dj-rest-auth) is also used for operations with an account 
+A simple, minimalistic and functional online password manager written on the frameworks such as 
+__[Django](https://github.com/django/django)__, 
+__[Django REST Framework](https://github.com/encode/django-rest-framework)__. The project uses 
+__[PostgreSQL](https://github.com/postgres/postgres)__ relational DBMS as the main database, 
+library __[celery](https://github.com/celery/celery)__ for working with pending tasks, 
+non-relational DBMS __[Redis](https://github.com/redis/redis)__ as a message broker and for caching. 
+The library __[dj-rest-auth](https://github.com/iMerica/dj-rest-auth)__ is also used for operations with an account 
 via REST API, to which there is also a Swagger schema generated using 
-[drf-spectacular](https://github.com/tfranzel/drf-spectacular/). The program is dockerized. 
-The linter and code formatter used is [ruff](https://github.com/astral-sh/ruff).  
+__[drf-spectacular](https://github.com/tfranzel/drf-spectacular/)__. The program is __[Docker](https://github.com/docker/compose)__'ized. 
+The linter and code formatter used is __[ruff](https://github.com/astral-sh/ruff)__.  
 
 __[Документация на русском языке](https://github.com/waflawe/eXinakai/blob/main/README.md)__
 ## Table of Contents <a name="table-of-contents"></a>
@@ -30,7 +32,7 @@ git clone https://github.com/waflawe/eXinakai.git
 cd eXinakai/
 ```
 ### Run in local development mode <a name="run-in-local-development-mode"></a>
-1. Install dependencies:
+1. Install requirements:
 ```cmd
 pip install requirements/dev.txt
 ```
@@ -42,13 +44,11 @@ redis-server
 ```
 4. In the second, run Celery:
 ```cmd
-source venv/bin/activate
 celery -A core.celery_setup:app worker --loglevel=info
 ```
 5. In the third, start the project:
 ```cmd
-source venv/bin/activate
-python manage.py runserver 0.0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8000
 ```
 6. Go to the [127.0.0.1:8000](http://127.0.0.1:8000/) page in your Internet browser.
 7. Enjoy.
@@ -80,7 +80,7 @@ you can add a note to it.
 
 If the encryption key is correct, you can perform the following actions with passwords:
 1. Creating passwords
-2. Read passwords and search by their signs
+2. Read passwords and search by their notes
 3. Deleting passwords  
 
 There is also a built-in flexible password generator. It works even without passing the correct
