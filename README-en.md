@@ -36,13 +36,13 @@ cd eXinakai/
 ```cmd
 pip install -r requirements/dev.txt
 ```
-2. Create an .env file and fill it with the .env.template file, modifying the variables 
+2. Create an `.env` file and fill it with the `.env.template` file, modifying the variables 
 marked with a comment if necessary.
-3. Launch three terminal windows separately. In the first one, run Redis:
+3. Launch three terminal windows separately. In the first one, run `Redis`:
 ```cmd
 redis-server
 ```
-4. In the second, run Celery:
+4. In the second, run `Celery`:
 ```cmd
 celery -A core.celery_setup:app worker --loglevel=info
 ```
@@ -53,9 +53,9 @@ python manage.py runserver 0.0.0.0:8000
 6. Go to the [127.0.0.1:8000](http://127.0.0.1:8000/) page in your Internet browser.
 7. Enjoy.
 ### Run in production mode via Docker <a name="running-in-production-mode-via-docker"></a>
-1. Create an .env.docker file and fill it with the .env.docker.template file, if necessary
+1. Create an `.env.docker` file and fill it with the `.env.docker.template` file, if necessary
 changing the variables marked with a comment.
-2. Bring up Docker-compose:
+2. Bring up `Docker-compose`:
 ```cmd
 docker-compose up
 ```
@@ -63,7 +63,7 @@ docker-compose up
 4. Enjoy.
 ## Functionality description <a name="functionality-description"></a>
 ### Account Management <a name="account-management"></a>
-In eXinakai, you can perform the following account operations:
+In `eXinakai`, you can perform the following account operations:
 1. Registration
 2. Authorization
 3. Reset account password
@@ -74,7 +74,7 @@ In eXinakai, you can perform the following account operations:
 	- Email 
 	- Enable/disable two-step authentication via email
 ### Password Manager <a name="password-manager"></a>
-In eXinakai, your passwords are encrypted and decrypted with the encryption key issued at registration. 
+In `eXinakai`, your passwords are encrypted and decrypted with the encryption key issued at registration. 
 Without the encryption key, it is impossible to read or change passwords. Also, when you create a new password,
 you can add a note to it.  
 
