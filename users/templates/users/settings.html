@@ -5,6 +5,13 @@
 {% endblock %}
 
 {% block body %}
+<style>
+    html, body {
+      overflow-x: hidden;
+      margin:0px;
+      padding:0px;
+    }
+</style>
 {% if bad_data %}
     <div class="alert alert-danger alert-dismissible" role="alert">
         <div id="form_errors">
