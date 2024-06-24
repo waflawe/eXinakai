@@ -16,6 +16,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_all_passwords,
 )
+from users.services import check_is_redirect_url_valid
 
 
 class IndexView(TemplateView):
@@ -28,10 +29,10 @@ class IndexView(TemplateView):
 
 
 class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
-    def get(self, request: HttpRequest, data: Optional[Dict] = None) -> HttpResponse:
+    def get(self, request: HttpRequest, data: Optional[Dict] = None, error: Optional[bool] = False) -> HttpResponse:
         context = {
             "form": AddPasswordForm(data),
-            "bad_data": True if data else False
+            "bad_data": error
         }
         return render(request, "exinakai/add_password.html", context=context)
 
@@ -45,7 +46,9 @@ class AddPasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
                 form.cleaned_data["note"]
             )
             return redirect(f"{reverse('exinakai:all-passwords')}?action=add-password-success")
-        return self.get(request, request.POST)
+        if check_is_redirect_url_valid(request, reverse("exinakai:generate-password"), raise_exception=False):
+            return self.get(request, request.POST)
+        return self.get(request, request.POST, True)
 
 
 class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, TemplateView):

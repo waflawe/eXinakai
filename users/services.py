@@ -1,6 +1,6 @@
 import secrets
 import string
-from typing import Mapping, NoReturn
+from typing import Mapping, NoReturn, Optional
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -50,12 +50,14 @@ class SetSessionCryptographicKeyService(object):
         return
 
 
-def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str) -> None | NoReturn:
+def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str, raise_exception: Optional[bool] = True) \
+        -> None | NoReturn:
     """
     A service to check if a request redirect matches one of the collection.
 
     :param request: django.http.request.HttpRequest object.
     :param valid_urls: A set of valid referers.
+    :param raise_exception: Flag to indicate whether an error should be raised if the redirected url is invalid.
     :return: None if redirect url valid else Http404 error.
     """
 
@@ -67,8 +69,10 @@ def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str) -> None 
     if not (is_requests_hosts_equal and any(
         url in referer for url in valid_urls
     )):
-        raise Http404
-    return None
+        if raise_exception:
+            raise Http404
+        return False
+    return True
 
 
 def generate_cryptographic_key() -> str:

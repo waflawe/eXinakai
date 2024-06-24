@@ -11,8 +11,8 @@ from django.db.models.query import QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.serializers import AuthTokenSerializer as AuthTokenSerializerCore
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView

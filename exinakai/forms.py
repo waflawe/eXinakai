@@ -1,7 +1,13 @@
 from django import forms
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
+from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
+
+
+class CustomPasswordInput(forms.PasswordInput):
+    def get_context(self, name, value, attrs):
+        return Input().get_context(name, value, attrs)
 
 
 class AddPasswordForm(forms.Form):
@@ -11,12 +17,12 @@ class AddPasswordForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Пароль"),
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
         strip=False
     )
     password2 = forms.CharField(
         label=_("Подтверждение пароля"),
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
         strip=False
     )
 
