@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import KeysView, Mapping, NamedTuple, Optional, Tuple
 
 from cryptography.fernet import Fernet
@@ -11,7 +12,7 @@ from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls.base import reverse
 
-from exinakai.models import Password
+from exinakai.models import Password, PasswordsCollection
 from exinakai.passgen import Options, generate_random_password
 
 User = get_user_model()
@@ -36,7 +37,19 @@ class PasswordRender(NamedTuple):
     decrypted_password: str
 
 
-def encrypt_and_save_password(user: User, cryptographic_key: str, password: str, note: str) -> None:
+@dataclass
+class PasswordsCollectionRender:
+    collection: PasswordsCollection
+    decrypted_passwords: Optional[Tuple[PasswordRender]] = None
+    count_decrypted_passwords: Optional[int] = 0
+
+
+def encrypt_and_save_password(
+        user: User,
+        cryptographic_key: str,
+        password: str, note: str,
+        collection: Optional[int] = None
+) -> None:
     """
     Service for encrypting and saving the password to the database.
 
@@ -44,12 +57,14 @@ def encrypt_and_save_password(user: User, cryptographic_key: str, password: str,
     :param cryptographic_key: The key with which the password will be encrypted.
     :param password: Password for encryption and saving.
     :param note: Password note.
+    :param collection: Password collection id.
     :return: None.
     """
 
     fernet = Fernet(bytes(cryptographic_key, "utf-8"))
     encrypted_password = fernet.encrypt(bytes(password, "utf-8")).decode("utf-8")
-    Password.storable.create(owner=user, note=note, password=encrypted_password)
+    collection = PasswordsCollection.objects.get(pk=collection)
+    collection.passwords.create(owner=user, note=note, password=encrypted_password, collection=collection)
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     cache.delete(key=key)
     return
@@ -92,7 +107,7 @@ def get_all_passwords(
     queryset = cache.get(key=key)
 
     if not queryset:
-        queryset = Password.storable.filter(owner=user)
+        queryset = Password.storable.filter(owner=user).select_related("collection")
         cache.set(key, queryset)
     if search:
         queryset = queryset.filter(note__icontains=search)
@@ -161,3 +176,57 @@ def generate_random_password_from_request_data(request_data: Mapping) -> tuple[s
         submited_sumbols,
         clean_length
     )
+
+
+def create_passwords_collection(owner: User, name: str) -> None:
+    """
+    Create passwords collection from owner, name and passwords.
+
+    :param owner: Owner of passwords collection.
+    :param name: Name of passwords collection.
+    """
+
+    collection = PasswordsCollection(owner=owner, name=name)
+    collection.save()
+    key = (f"{owner.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+           f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
+    cache.delete(key=key)
+    return
+
+
+def get_user_collections(user: User) -> QuerySet[PasswordsCollection]:
+    """
+    Get collections where user is owner.
+
+    :param user: Some user.
+    :return: QuerySet of collections.
+    """
+
+    key = (f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+           f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
+    collections = cache.get(key)
+
+    if not collections:
+        collections = PasswordsCollection.objects.filter(owner=user).prefetch_related("passwords")
+        cache.set(key, collections)
+
+    return collections
+
+
+def get_render_ready_collections(user: User, search: str | None, cryptographic_key: str) \
+        -> Tuple[PasswordsCollectionRender, ...]:
+    collection_renders: Tuple[PasswordsCollectionRender, ...] = tuple(
+        PasswordsCollectionRender(collection, tuple(
+            PasswordRender(
+                password,
+                get_decrypted_password(cryptographic_key, password.password)
+            ) for password in (
+                collection.passwords.filter(note__icontains=search).all() if search else collection.passwords.filter()
+            )
+        )) for collection in get_user_collections(user)
+    )
+
+    for collection_render in collection_renders:
+        collection_render.count_decrypted_passwords = len(collection_render.decrypted_passwords)
+
+    return collection_renders

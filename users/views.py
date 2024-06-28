@@ -1,6 +1,7 @@
 from random import randrange
 from typing import Dict, Optional
 
+from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView, PasswordResetConfirmView, PasswordResetView
@@ -11,6 +12,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, FormView, View
 
+from exinakai.services import create_passwords_collection
 from users.forms import (
     ActivateCryptographicKeyForm,
     PasswordChangeForm,
@@ -52,7 +54,9 @@ class SingUpView(CreateView):
 
     def form_valid(self, form: UserCreationForm):
         send_change_account_email_mail_message.delay(form.instance.email)
-        return super().form_valid(form)
+        form_valid = super().form_valid(form)
+        create_passwords_collection(form.instance, settings.DEFAULT_PASSWORDS_COLLECTION_NAME)
+        return form_valid
 
     def form_invalid(self, form: UserCreationForm):
         return self.get(self.request, bad_details=True, form=form)

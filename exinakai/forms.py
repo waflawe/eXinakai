@@ -1,8 +1,13 @@
 from django import forms
-from django.contrib.auth import password_validation
+from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
 from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
+
+from exinakai.models import PasswordsCollection
+
+User = get_user_model()
 
 
 class CustomPasswordInput(forms.PasswordInput):
@@ -25,6 +30,14 @@ class AddPasswordForm(forms.Form):
         widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
         strip=False
     )
+    collection = forms.ChoiceField(required=False)
+
+    def __init__(self, collections: QuerySet, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["collection"].choices = (
+            (collection.id, str(collection)) for collection in collections
+        )
+        self.fields["collection"].label = _("Коллекция")
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -36,3 +49,9 @@ class AddPasswordForm(forms.Form):
             )
         password_validation.validate_password(password2)
         return password2
+
+
+class AddPasswordsCollectionForm(forms.ModelForm):
+    class Meta:
+        model = PasswordsCollection
+        fields = "name",
