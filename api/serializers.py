@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from exinakai.models import Password
+from exinakai.models import Password, PasswordsCollection
 from exinakai.services import get_decrypted_password
 from users.forms import PasswordResetForm
 
@@ -74,14 +74,18 @@ class SettingsSerializer(serializers.ModelSerializer):
 
 class PasswordsSerializer(serializers.ModelSerializer):
     password = serializers.SerializerMethodField()
+    collection = serializers.SerializerMethodField()
     time_added = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Password
-        fields = "id", "note", "password", "time_added"
+        fields = "id", "note", "password", "collection", "time_added"
 
     def get_password(self, password: Password) -> str:
         return get_decrypted_password(self.context["request"].session["cryptographic_key"], password.password)
+
+    def get_collection(self, password: Password) -> str:
+        return password.collection.name
 
     def get_time_added(self, password: Password) -> Dict:
         return datetime_to_timezone(password.time_added, self.context["request"].user.timezone)
@@ -89,3 +93,16 @@ class PasswordsSerializer(serializers.ModelSerializer):
 
 class RandomPasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
+
+
+class PasswordsCollectionSerializer(serializers.ModelSerializer):
+    time_created = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PasswordsCollection
+        fields = "id", "owner", "name", "time_created"
+        read_only_fields = "id", "time_created"
+        extra_kwargs = {'owner': {'required': False}}
+
+    def get_time_created(self, collection: PasswordsCollection) -> Dict:
+        return datetime_to_timezone(collection.time_created, self.context["request"].user.timezone)

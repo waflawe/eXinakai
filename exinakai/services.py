@@ -151,6 +151,9 @@ def delete_password(user: User, **kwargs) -> None:
     password.delete()
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     cache.delete(key=key)
+    key = (f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+           f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
+    cache.delete(key=key)
     return
 
 

@@ -6,7 +6,9 @@ from dj_rest_auth.serializers import (
 from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
 from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
 from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db.models.query import QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status, viewsets
@@ -23,12 +25,18 @@ from api.serializers import (
     CryptographicKeySerializer,
     DetailedCodeSerializer,
     DetailSerializer,
+    PasswordsCollectionSerializer,
     PasswordsSerializer,
     RandomPasswordSerializer,
     SettingsSerializer,
     TwoFactorAuthenticationCodeSerializer,
 )
-from exinakai.services import encrypt_and_save_password, generate_random_password_from_request_data, get_all_passwords
+from exinakai.services import (
+    encrypt_and_save_password,
+    generate_random_password_from_request_data,
+    get_all_passwords,
+    get_user_collections,
+)
 from users.services import (
     SetSessionCryptographicKeyService,
     make_2fa_authentication,
@@ -283,3 +291,62 @@ class GeneratePasswordAPIView(APIView):
         password, *_ = generate_random_password_from_request_data(request.query_params)
         data = self.serializer_class({"password": password}).data
         return Response(data, status=status.HTTP_200_OK)
+
+
+@extend_schema_view(
+    get=extend_schema(responses={
+        status.HTTP_200_OK: PasswordsCollectionSerializer
+    })
+)
+class PasswordsCollectionViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    """View all passwords collections."""
+
+    lookup_url_kwarg = "pk"
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
+    serializer_class = PasswordsCollectionSerializer
+
+    def get_queryset(self) -> QuerySet:
+        return get_user_collections(self.request.user)
+
+    @extend_schema(request=PasswordsCollectionSerializer, responses={
+        status.HTTP_201_CREATED: DetailSerializer,
+        status.HTTP_400_BAD_REQUEST: DetailSerializer
+    })
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        """Saves the new passwords collection to the database."""
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=request.user)
+        data = DetailSerializer({"detail": "Коллекция добавлена успешно."}).data
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(responses={
+        status.HTTP_204_NO_CONTENT: DetailSerializer,
+        status.HTTP_404_NOT_FOUND: DetailSerializer
+    })
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
+        """Deleting a passwords collection from the database."""
+
+        if (collection := self.get_object()).name == settings.DEFAULT_PASSWORDS_COLLECTION_NAME:
+            data = DetailSerializer({"detail": "Эту коллекцию нельзя удалить."}).data
+            return Response(data, status=status.HTTP_403_FORBIDDEN)
+        default_collection = self.get_queryset().filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
+        passwords = collection.passwords.all()
+        collection.passwords.clear()
+        for password in passwords:
+            default_collection.passwords.add(password)
+        collection.delete()
+        key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+               f"{settings.ALL_USER_PASSWORDS_CACHE_NAME}")
+        cache.delete(key=key)
+        key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+               f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
+        cache.delete(key=key)
+        data = DetailSerializer({"detail": "Коллекция удалена успешно."}).data
+        return Response(data, status=status.HTTP_204_NO_CONTENT)

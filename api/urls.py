@@ -8,6 +8,7 @@ from api.views import (
     PasswordChangeAPIView,
     PasswordResetAPIView,
     PasswordResetConfirmAPIView,
+    PasswordsCollectionViewSet,
     PasswordViewSet,
     UpdateSettingsAPIView,
     UserLoginAPIView,
@@ -17,6 +18,7 @@ from api.views import (
 
 router = SimpleRouter()
 router.register(r"passwords", PasswordViewSet, basename="passwords")
+router.register(r"collections", PasswordsCollectionViewSet, basename="collections")
 
 urlpatterns = [
     path("", include(router.urls)),
