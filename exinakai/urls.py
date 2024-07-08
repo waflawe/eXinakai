@@ -4,10 +4,10 @@ from exinakai.views import (
     AddPasswordsCollectionView,
     AddPasswordView,
     AllPasswordsView,
+    DeletePasswordsCollectionView,
     DeletePasswordView,
     GeneratePasswordView,
     IndexView,
-    DeletePasswordsCollectionView
 )
 
 app_name = "exinakai"

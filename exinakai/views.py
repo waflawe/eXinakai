@@ -1,16 +1,16 @@
 from typing import Dict, Optional, Type
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.forms import BaseForm
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls.base import reverse
 from django.views.generic import TemplateView, View
-from django.core.exceptions import PermissionDenied
-from django.core.cache import cache
-from django.conf import settings
-from django.db import transaction
 
 from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm
 from exinakai.services import (
