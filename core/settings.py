@@ -145,9 +145,12 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # CACHE
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": env("DJANGO_CACHE_URL"),
-        "TIMEOUT": 60*60
+        "TIMEOUT": 60*60,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 

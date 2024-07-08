@@ -7,6 +7,10 @@ from django.http.response import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls.base import reverse
 from django.views.generic import TemplateView, View
+from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
+from django.conf import settings
+from django.db import transaction
 
 from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm
 from exinakai.services import (
@@ -129,11 +133,39 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
 class DeletePasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         password = check_user_perms_to_edit_password(request.user, pk=pk)
-        return render(request, "exinakai/delete_password.html", context={"password": password})
+        return render(request, "exinakai/removing.html", context={"password": password})
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         delete_password(request.user, pk=pk)
         return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-password-success")
+
+
+class DeletePasswordsCollectionView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+        collection = get_user_collections(request.user).filter(pk=pk).first()
+        if collection:
+            return render(request, "exinakai/removing.html", context={"collection": collection})
+        raise PermissionDenied()
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        collections = get_user_collections(request.user)
+        collection = collections.filter(pk=pk).first()
+        if collection and collection.name != settings.DEFAULT_PASSWORDS_COLLECTION_NAME:
+            default_collection = collections.filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
+            passwords = collection.passwords.all()
+            with transaction.atomic() as _:
+                passwords.update(collection=default_collection)
+                for password in passwords:
+                    default_collection.passwords.add(password)
+                collection.delete()
+            key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+                   f"{settings.ALL_USER_PASSWORDS_CACHE_NAME}")
+            cache.delete(key=key)
+            key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
+                   f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
+            cache.delete(key=key)
+            return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-collection-success")
+        raise PermissionDenied()
 
 
 class GeneratePasswordView(TemplateView):

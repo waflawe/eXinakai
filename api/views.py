@@ -338,7 +338,7 @@ class PasswordsCollectionViewSet(
             return Response(data, status=status.HTTP_403_FORBIDDEN)
         default_collection = self.get_queryset().filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
         passwords = collection.passwords.all()
-        collection.passwords.clear()
+        passwords.update(collection=default_collection)
         for password in passwords:
             default_collection.passwords.add(password)
         collection.delete()
