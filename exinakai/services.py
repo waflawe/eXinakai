@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls.base import reverse
 
 from exinakai.models import Password, PasswordsCollection
@@ -120,7 +120,7 @@ def get_all_passwords(
     return queryset
 
 
-def get_password(**kwargs) -> Password: return Password.storable.get(**kwargs)
+def get_password(**kwargs) -> Password: return get_object_or_404(Password, **kwargs)
 
 
 def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
@@ -233,3 +233,14 @@ def get_render_ready_collections(user: User, search: str | None, cryptographic_k
         collection_render.count_decrypted_passwords = len(collection_render.decrypted_passwords)
 
     return collection_renders
+
+
+def change_password_collection(user: User, query_params: Mapping, collection: int) -> None:
+    password = check_user_perms_to_edit_password(user, pk=query_params.get("pk", 0))
+    collection = get_object_or_404(PasswordsCollection, pk=collection)
+    old_collection = password.collection
+    password.collection = collection
+    password.save()
+    old_collection.passwords.remove(password)
+    collection.passwords.add(password)
+    return

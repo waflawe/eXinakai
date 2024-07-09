@@ -12,9 +12,10 @@ from django.shortcuts import redirect, render
 from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
-from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm
+from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm, ChangePasswordCollectionForm
 from exinakai.services import (
     CryptographicKeyRequiredMixin,
+    change_password_collection,
     check_user_perms_to_edit_password,
     create_passwords_collection,
     delete_password,
@@ -65,7 +66,7 @@ class CustomCreateView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
         return ""
 
     def form_invalid(self, request: HttpRequest, form: BaseForm) -> HttpResponse:
-        return HttpResponse()
+        return self.get(request, request.POST, True)
 
 
 class AddPasswordView(CustomCreateView):
@@ -92,7 +93,7 @@ class AddPasswordView(CustomCreateView):
     def form_invalid(self, request: HttpRequest, form: BaseForm) -> HttpResponse:
         if check_is_redirect_url_valid(request, reverse("exinakai:generate-password"), raise_exception=False):
             return self.get(request, request.POST)
-        return self.get(request, request.POST, True)
+        return super().form_invalid(request, form)
 
 
 class AddPasswordsCollectionView(CustomCreateView):
@@ -107,9 +108,6 @@ class AddPasswordsCollectionView(CustomCreateView):
 
     def get_success_url(self) -> str:
         return f"{reverse('exinakai:all-passwords')}?action=add-collection-success"
-
-    def form_invalid(self, request: HttpRequest, form: BaseForm) -> HttpResponse:
-        return self.get(request, request.POST, True)
 
 
 class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, TemplateView):
@@ -166,6 +164,26 @@ class DeletePasswordsCollectionView(LoginRequiredMixin, CryptographicKeyRequired
             cache.delete(key=key)
             return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-collection-success")
         raise PermissionDenied()
+
+
+class ChangePasswordCollectionView(CustomCreateView):
+    template_name = "exinakai/change_password_collection.html"
+    form_class = ChangePasswordCollectionForm
+
+    def get_form_kwargs(self, request: HttpRequest) -> Dict:
+        return {
+            "collections": get_user_collections(request.user)
+        }
+
+    def get_success_url(self) -> str:
+        return f"{reverse('exinakai:all-passwords')}?action=change-password-collection-success"
+
+    def form_valid(self, request: HttpRequest, form: BaseForm) -> None:
+        change_password_collection(
+            request.user,
+            request.GET,
+            form.cleaned_data["collection"]
+        )
 
 
 class GeneratePasswordView(TemplateView):

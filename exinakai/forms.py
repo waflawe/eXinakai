@@ -15,7 +15,18 @@ class CustomPasswordInput(forms.PasswordInput):
         return Input().get_context(name, value, attrs)
 
 
-class AddPasswordForm(forms.Form):
+class ChangePasswordCollectionForm(forms.Form):
+    collection = forms.ChoiceField(required=False)
+
+    def __init__(self, collections: QuerySet, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["collection"].choices = (
+            (collection.id, str(collection)) for collection in collections
+        )
+        self.fields["collection"].label = _("Коллекция")
+
+
+class AddPasswordForm(ChangePasswordCollectionForm):
     note = forms.CharField(
         label=_("Примета"),
         max_length=256
@@ -30,14 +41,6 @@ class AddPasswordForm(forms.Form):
         widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
         strip=False
     )
-    collection = forms.ChoiceField(required=False)
-
-    def __init__(self, collections: QuerySet, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["collection"].choices = (
-            (collection.id, str(collection)) for collection in collections
-        )
-        self.fields["collection"].label = _("Коллекция")
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
