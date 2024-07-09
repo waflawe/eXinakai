@@ -83,6 +83,15 @@ If the encryption key is correct, you can perform the following actions with pas
 2. Read passwords and search by their notes
 3. Deleting passwords  
 
+Also `eXinakai` has a convenient collection system for passwords. It allows you to collect a set of an unlimited number 
+of passwords in one place, which allows you to better navigate the manager when there are not a few of them. Within the 
+system, you can:
+
+1. Add collections
+2. Delete collections
+3. Add passwords to a collection
+4. Change a password collection  
+
 There is also a built-in flexible password generator. It works even without passing the correct
 encryption key by simply logging into your account.
 ## Screenshots <a name="screenshots"></a>
@@ -106,5 +115,7 @@ encryption key by simply logging into your account.
    <img alt="Reading passwords" height="336" src=".githubscreenshots/all-passwords.png" width="700"/>
 3. Password Generation:  
    <img alt="Generating passwords" height="336" src=".githubscreenshots/generate-password.png" width="700"/>
+4. Adding a password collection:  
+   <img alt="Adding a password collection" height="336" src=".githubscreenshots/add-collection.png" width="700"/>
 ## License <a name="license"></a>
 This project is licensed by [MIT license](https://github.com/waflawe/eXinakai/blob/main/LICENSE).
