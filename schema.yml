@@ -4,6 +4,135 @@ info:
   version: 1.1.0
   description: Простой, минималистичный и функциональный онлайн менеджер паролей.
 paths:
+  /api/v1/change/password-collection/:
+    post:
+      operationId: change_password_collection_create
+      tags:
+      - change
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordCollection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordCollection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordCollection'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+  /api/v1/collections/:
+    get:
+      operationId: collections_list
+      description: View all passwords collections.
+      parameters:
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: offset
+        required: false
+        in: query
+        description: The initial index from which to return the results.
+        schema:
+          type: integer
+      tags:
+      - collections
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPasswordsCollectionList'
+          description: ''
+    post:
+      operationId: collections_create
+      description: Saves the new passwords collection to the database.
+      tags:
+      - collections
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordsCollection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordsCollection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordsCollection'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+  /api/v1/collections/{id}/:
+    delete:
+      operationId: collections_destroy
+      description: Deleting a passwords collection from the database.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - collections
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
   /api/v1/generate/password/:
     get:
       operationId: generate_password_retrieve
@@ -527,6 +656,16 @@ components:
           type: string
       required:
       - token
+    ChangePasswordCollection:
+      type: object
+      properties:
+        pk:
+          type: integer
+        collection:
+          type: integer
+      required:
+      - collection
+      - pk
     CryptographicKey:
       type: object
       properties:
@@ -553,6 +692,29 @@ components:
       required:
       - code
       - detail
+    PaginatedPasswordsCollectionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=400&limit=100
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?offset=200&limit=100
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PasswordsCollection'
     PaginatedPasswordsList:
       type: object
       required:
@@ -633,15 +795,40 @@ components:
         password:
           type: string
           readOnly: true
+        collection:
+          type: string
+          readOnly: true
         time_added:
           type: object
           additionalProperties: {}
           readOnly: true
       required:
+      - collection
       - id
       - note
       - password
       - time_added
+    PasswordsCollection:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          title: Создатель
+        name:
+          type: string
+          title: Название
+          maxLength: 128
+        time_created:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - id
+      - name
+      - time_created
     RandomPassword:
       type: object
       properties:

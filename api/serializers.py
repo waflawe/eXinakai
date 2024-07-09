@@ -106,3 +106,8 @@ class PasswordsCollectionSerializer(serializers.ModelSerializer):
 
     def get_time_created(self, collection: PasswordsCollection) -> Dict:
         return datetime_to_timezone(collection.time_created, self.context["request"].user.timezone)
+
+
+class ChangePasswordCollectionSerializer(serializers.Serializer):
+    pk = serializers.IntegerField()
+    collection = serializers.IntegerField()

@@ -19,9 +19,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.permissions import IsUserCryptographicKeyValid
+from api.permissions import IsUserCanEditCollection, IsUserCryptographicKeyValid
 from api.serializers import (
     AuthTokenSerializer,
+    ChangePasswordCollectionSerializer,
     CryptographicKeySerializer,
     DetailedCodeSerializer,
     DetailSerializer,
@@ -32,6 +33,7 @@ from api.serializers import (
     TwoFactorAuthenticationCodeSerializer,
 )
 from exinakai.services import (
+    change_password_collection,
     encrypt_and_save_password,
     generate_random_password_from_request_data,
     get_all_passwords,
@@ -307,7 +309,7 @@ class PasswordsCollectionViewSet(
     """View all passwords collections."""
 
     lookup_url_kwarg = "pk"
-    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditCollection)
     serializer_class = PasswordsCollectionSerializer
 
     def get_queryset(self) -> QuerySet:
@@ -350,3 +352,22 @@ class PasswordsCollectionViewSet(
         cache.delete(key=key)
         data = DetailSerializer({"detail": "Коллекция удалена успешно."}).data
         return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordCollectionAPIView(APIView):
+    serializer_class = ChangePasswordCollectionSerializer
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
+
+    @extend_schema(responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_403_FORBIDDEN: DetailSerializer,
+        status.HTTP_404_NOT_FOUND: DetailSerializer
+    })
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        change_password_collection(
+            request.user,
+            request.data,
+            request.data.get("collection", 0)
+        )
+        data = DetailSerializer({"detail": "Коллекция пароля изменена успешно."}).data
+        return Response(data, status=status.HTTP_200_OK)
