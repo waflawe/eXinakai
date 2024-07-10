@@ -1,10 +1,7 @@
 from typing import Dict, Optional, Type
 
-from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
 from django.forms import BaseForm
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
@@ -23,6 +20,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_render_ready_collections,
     get_user_collections,
+    delete_password_collection,
 )
 from users.services import check_is_redirect_url_valid
 
@@ -40,13 +38,14 @@ class CustomCreateView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
     template_name: str
     form_class: Type
 
-    def get(self, request: HttpRequest, data: Optional[Dict] = None, error: Optional[bool] = False) -> HttpResponse:
+    def get(self, request: HttpRequest, data: Optional[Dict] = None, error: Optional[bool] = False, **kwargs) \
+            -> HttpResponse:
         return render(request, self.template_name, context=self.get_context(request, data, error))
 
-    def post(self, request: HttpRequest) -> HttpResponse:
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         form = self.form_class(**self.get_form_kwargs(request), data=request.POST)
         if form.is_valid():
-            self.form_valid(request, form)
+            self.form_valid(request, form, *args, **kwargs)
             return redirect(self.get_success_url())
         return self.form_invalid(request, form)
 
@@ -59,14 +58,14 @@ class CustomCreateView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
     def get_form_kwargs(self, request: HttpRequest) -> Dict:
         return {}
 
-    def form_valid(self, request: HttpRequest, form: BaseForm) -> None:
+    def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
         pass
 
     def get_success_url(self) -> str:
         return ""
 
     def form_invalid(self, request: HttpRequest, form: BaseForm) -> HttpResponse:
-        return self.get(request, request.POST, True)
+        return self.get(request, data=request.POST, error=True)
 
 
 class AddPasswordView(CustomCreateView):
@@ -78,7 +77,7 @@ class AddPasswordView(CustomCreateView):
             "collections": get_user_collections(request.user)
         }
 
-    def form_valid(self, request: HttpRequest, form: BaseForm) -> None:
+    def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
         encrypt_and_save_password(
             request.user,
             request.session["cryptographic_key"],
@@ -92,7 +91,7 @@ class AddPasswordView(CustomCreateView):
 
     def form_invalid(self, request: HttpRequest, form: BaseForm) -> HttpResponse:
         if check_is_redirect_url_valid(request, reverse("exinakai:generate-password"), raise_exception=False):
-            return self.get(request, request.POST)
+            return self.get(request, data=request.POST)
         return super().form_invalid(request, form)
 
 
@@ -100,7 +99,7 @@ class AddPasswordsCollectionView(CustomCreateView):
     template_name = "exinakai/add_collection.html"
     form_class = AddPasswordsCollectionForm
 
-    def form_valid(self, request: HttpRequest, form: BaseForm) -> None:
+    def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
         create_passwords_collection(
             request.user,
             form.cleaned_data["name"]
@@ -141,27 +140,18 @@ class DeletePasswordView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View
 class DeletePasswordsCollectionView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
     def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         collection = get_user_collections(request.user).filter(pk=pk).first()
-        if collection:
-            return render(request, "exinakai/removing.html", context={"collection": collection})
-        raise PermissionDenied()
+        if not collection:
+            raise PermissionDenied()
+        return render(request, "exinakai/removing.html", context={"collection": collection})
 
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         collections = get_user_collections(request.user)
-        collection = collections.filter(pk=pk).first()
-        if collection and collection.name != settings.DEFAULT_PASSWORDS_COLLECTION_NAME:
-            default_collection = collections.filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
-            passwords = collection.passwords.all()
-            with transaction.atomic() as _:
-                passwords.update(collection=default_collection)
-                for password in passwords:
-                    default_collection.passwords.add(password)
-                collection.delete()
-            key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-                   f"{settings.ALL_USER_PASSWORDS_CACHE_NAME}")
-            cache.delete(key=key)
-            key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-                   f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
-            cache.delete(key=key)
+        is_deleted = delete_password_collection(
+            request.user,
+            collections,
+            collections.filter(pk=pk).first()
+        )
+        if is_deleted:
             return redirect(f"{reverse('exinakai:all-passwords')}?action=delete-collection-success")
         raise PermissionDenied()
 
@@ -178,10 +168,10 @@ class ChangePasswordCollectionView(CustomCreateView):
     def get_success_url(self) -> str:
         return f"{reverse('exinakai:all-passwords')}?action=change-password-collection-success"
 
-    def form_valid(self, request: HttpRequest, form: BaseForm) -> None:
+    def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
         change_password_collection(
             request.user,
-            request.GET,
+            {"pk": kwargs.get("pk", 0)},
             form.cleaned_data["collection"]
         )
 

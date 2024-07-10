@@ -8,7 +8,6 @@ from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmV
 from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.db.models.query import QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, permissions, status, viewsets
@@ -38,6 +37,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_all_passwords,
     get_user_collections,
+    delete_password_collection
 )
 from users.services import (
     is_cryptographic_key_valid,
@@ -336,23 +336,18 @@ class PasswordsCollectionViewSet(
     def destroy(self, request: Request, *args, **kwargs) -> Response:
         """Deleting a passwords collection from the database."""
 
-        if (collection := self.get_object()).name == settings.DEFAULT_PASSWORDS_COLLECTION_NAME:
-            data = DetailSerializer({"detail": "Эту коллекцию нельзя удалить."}).data
-            return Response(data, status=status.HTTP_403_FORBIDDEN)
-        default_collection = self.get_queryset().filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
-        passwords = collection.passwords.all()
-        passwords.update(collection=default_collection)
-        for password in passwords:
-            default_collection.passwords.add(password)
-        collection.delete()
-        key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-               f"{settings.ALL_USER_PASSWORDS_CACHE_NAME}")
-        cache.delete(key=key)
-        key = (f"{self.request.user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-               f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
-        cache.delete(key=key)
-        data = DetailSerializer({"detail": "Коллекция удалена успешно."}).data
-        return Response(data, status=status.HTTP_204_NO_CONTENT)
+        collections = self.get_queryset()
+        collection = self.get_object()
+        is_deleted = delete_password_collection(
+            request.user,
+            collections,
+            collection
+        )
+        if is_deleted:
+            data = DetailSerializer({"detail": "Коллекция удалена успешно."}).data
+            return Response(data, status=status.HTTP_204_NO_CONTENT)
+        data = DetailSerializer({"detail": "Эту коллекцию нельзя удалить."}).data
+        return Response(data, status=status.HTTP_403_FORBIDDEN)
 
 
 class ChangePasswordCollectionAPIView(APIView):

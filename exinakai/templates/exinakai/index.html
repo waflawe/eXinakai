@@ -8,19 +8,21 @@
 {% if action %}
     <br>
     <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-        {% if action == "activate-cryptographic-key-success" and request.user.is_authenticated %}
-            <h5 class="indent">{{request.user}}, Вы успешно активировали ключ шифрования.</h5>
-        {% elif action == "logout" %}
-            <h5 class="indent">Вы успешно вышли из системы.</h5>
-        {% elif action == "settings-updated" %}
-            <h5 class="indent">Настройки успешно обновлены.</h5>
-        {% elif action == "password-change-done" %}
-            <h5 class="indent">Пароль изменен успешно.</h5>
-        {% elif action == 'password-reset-done' %}
-            <h5 class="indent">Ссылка для сброса пароля отправлена на почту.</h5>
-        {% elif action == 'password-reset-complete' %}
-            <h5 class="indent">Пароль изменен успешно.</h5>
-        {% endif %}
+        <h5 class="indent">
+            {% if action == "activate-cryptographic-key-success" and request.user.is_authenticated %}
+                {{request.user}}, Вы успешно активировали ключ шифрования.
+            {% elif action == "logout" %}
+                Вы успешно вышли из системы.
+            {% elif action == "settings-updated" and request.user.is_authenticated %}
+                Настройки успешно обновлены.
+            {% elif action == "password-change-done" and request.user.is_authenticated %}
+                Пароль изменен успешно.
+            {% elif action == 'password-reset-done' %}
+                Ссылка для сброса пароля отправлена на почту.
+            {% elif action == 'password-reset-complete' %}
+                Пароль изменен успешно.
+            {% endif %}
+        </h5>
     </div>
 {% endif %}
 <br>

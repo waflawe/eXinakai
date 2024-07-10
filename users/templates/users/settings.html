@@ -18,12 +18,10 @@
             <strong>Неверные данные.</strong>
         </div>
     </div>
-{% elif action %}
+{% elif action == "settings-updated" %}
     <br>
     <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-        {% if action == "settings-updated" %}
-            <h5 class="indent">Настройки успешно обновлены.</h5>
-        {% endif %}
+        <h5 class="indent">Настройки успешно обновлены.</h5>
     </div>
     <br>
 {% endif %}
