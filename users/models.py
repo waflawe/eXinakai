@@ -67,7 +67,7 @@ class ExinakaiUser(AbstractBaseUser):
         verbose_name = _("Пользователь")
         verbose_name_plural = _("Пользователи")
 
-        db_table = "exinakai_user"
+        db_table = "exinakai_users"
 
     def __str__(self):
         return f"{self.username}"

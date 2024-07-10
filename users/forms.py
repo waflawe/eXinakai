@@ -1,12 +1,11 @@
 from typing import Any, Dict, NoReturn, Optional, Union
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordChangeForm as PasswordChangeFormCore
 from django.contrib.auth.forms import PasswordResetForm as PasswordResetFormCore
 from django.core.exceptions import ValidationError
-from django.forms.widgets import Select
+from django.forms.widgets import CheckboxInput, Select, TextInput
 from django.utils.translation import gettext_lazy as _
 from pytz import common_timezones
 
@@ -116,7 +115,7 @@ class UpdateSettingsForm(forms.ModelForm):
 
     timezone = forms.ChoiceField(
         choices=timezones,
-        widget=DataListInput(attrs={"placeholder": f"Пример: {settings.DEFAULT_USER_TIMEZONE}"}),
+        widget=DataListInput(),
         label="Временная зона"
     )
 
@@ -125,7 +124,13 @@ class UpdateSettingsForm(forms.ModelForm):
         fields = "email", "avatar", "timezone", "is_2fa_enabled"
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", kwargs.get("instance"))
+
         super().__init__(*args, **kwargs)
+        self.fields["email"].widget = TextInput(attrs={"placeholder": user.email})
+        is_2fa_enabled_attrs = {"checked": ""} if user.is_2fa_enabled else {}
+        self.fields["timezone"].widget.attrs = {"placeholder": user.timezone}
+        self.fields["is_2fa_enabled"].widget = CheckboxInput(attrs=is_2fa_enabled_attrs)
 
         for fname, fvalue in self.fields.items():
             fvalue.required = False

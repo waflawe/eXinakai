@@ -40,7 +40,7 @@ from exinakai.services import (
     get_user_collections,
 )
 from users.services import (
-    SetSessionCryptographicKeyService,
+    is_cryptographic_key_valid,
     make_2fa_authentication,
     process_avatar_and_email_if_updated,
     validate_2fa_code,
@@ -126,15 +126,16 @@ class ActivateCryptographicKeyAPIView(APIView):
     def post(self, request: Request, *args, **kwargs) -> Response:
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if SetSessionCryptographicKeyService.is_key_valid(request.user, serializer.validated_data["cryptographic_key"]):
-            SetSessionCryptographicKeyService.set_key(request.session, serializer.validated_data["cryptographic_key"])
-            data = DetailSerializer({"detail": "Ключ шифрования активирован."}).data
-            return Response(data, status=status.HTTP_200_OK)
-        data = DetailedCodeSerializer({
-            "detail": "Неверный ключ шифрования.",
-            "code": "INVALID_KEY"
-        }).data
-        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        key = serializer.validated_data["cryptographic_key"]
+        if not is_cryptographic_key_valid(request.user, key):
+            data = DetailedCodeSerializer({
+                "detail": "Неверный ключ шифрования.",
+                "code": "INVALID_KEY"
+            }).data
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        request.session["cryptographic_key"] = key
+        data = DetailSerializer({"detail": "Ключ шифрования активирован."}).data
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class UserLogoutAPIView(APIView):

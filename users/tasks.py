@@ -92,7 +92,6 @@ def send_mail_with_subject_and_body_as_html(
     :param body_template: HTML with the body of the email.
     :param recipient_mail: Recipient of the letter.
     :param context: Context for the body of the letter.
-    :return: None.
     """
 
     subject = render_to_string(subject_template)

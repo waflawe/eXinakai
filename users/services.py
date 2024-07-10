@@ -18,7 +18,7 @@ User = get_user_model()
 
 
 class CryptographicKeyEmptyRequiredMixin(AccessMixin):
-    """Mixin to verify that the user has an encryption key attached."""
+    """Mixin to verify that the user does not have an encryption key."""
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         if request.session.get("cryptographic_key", False):
@@ -26,28 +26,21 @@ class CryptographicKeyEmptyRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-class SetSessionCryptographicKeyService(object):
-    @staticmethod
-    def is_key_valid(user: User, cryptographic_key: str) -> bool:
-        """
-        Checking the encryption key for validity.
+def is_cryptographic_key_valid(user: User, cryptographic_key: str) -> bool:
+    """
+    Checking the encryption key for validity.
 
-        :param user: The user to whom the key is checked for validity.
-        :param cryptographic_key: Key to check for validity.
-        :return: Is the key valid.
-        """
+    :param user: The user to whom the key is checked for validity.
+    :param cryptographic_key: Key to check for validity.
+    :return: Is the key valid.
+    """
 
-        password = Password.storable.filter(owner=user).only("password").first()
-        if password:
-            decrypted_password = get_decrypted_password(cryptographic_key, password.password)
-            if decrypted_password == settings.INVALID_CRYPTOGRAPHIC_KEY_ERROR_MESSAGE:
-                return False
-        return True
-
-    @staticmethod
-    def set_key(session: SessionBase, cryptographic_key: str) -> None:
-        session["cryptographic_key"] = cryptographic_key
-        return
+    password = Password.storable.filter(owner=user).only("password").first()
+    if password:
+        decrypted_password = get_decrypted_password(cryptographic_key, password.password)
+        if decrypted_password == settings.INVALID_CRYPTOGRAPHIC_KEY_ERROR_MESSAGE:
+            return False
+    return True
 
 
 def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str, raise_exception: Optional[bool] = True) \
@@ -58,7 +51,7 @@ def check_is_redirect_url_valid(request: HttpRequest, *valid_urls: str, raise_ex
     :param request: django.http.request.HttpRequest object.
     :param valid_urls: A set of valid referers.
     :param raise_exception: Flag to indicate whether an error should be raised if the redirected url is invalid.
-    :return: None if redirect url valid else Http404 error.
+    :return: True if redirect url valid else Http404 error or False.
     """
 
     is_requests_hosts_equal = request.get_host() in request.META.get("HTTP_REFERER", "")
@@ -88,10 +81,10 @@ def make_2fa_authentication(session: SessionBase, user: User) -> str:
     :return: Generated code for 2FA.
     """
 
-    code = "".join(secrets.choice(string.digits) for _ in range(6))
+    code = "".join(secrets.choice(string.digits) for _ in range(settings.TWO_FACTOR_AUTHENTICATION_CODE_LENGTH))
     session["2fa_code"] = code
     session["2fa_code_user_id"] = user.pk
-    session.set_expiry(60*5)
+    session.set_expiry(settings.TWO_FACTOR_AUTHENTICATION_CODE_LIVETIME)
     return code
 
 
