@@ -6,7 +6,6 @@ from dj_rest_auth.serializers import (
 from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
 from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
 from dj_rest_auth.views import PasswordResetView as PasswordResetViewCore
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -33,11 +32,11 @@ from api.serializers import (
 )
 from exinakai.services import (
     change_password_collection,
+    delete_password_collection,
     encrypt_and_save_password,
     generate_random_password_from_request_data,
     get_all_passwords,
     get_user_collections,
-    delete_password_collection
 )
 from users.services import (
     is_cryptographic_key_valid,
@@ -104,13 +103,13 @@ class UserTwoFactorAuthenticationAPIView(TokenLoginAPIMixin, APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = validate_2fa_code(request.session, serializer.validated_data)
-        if user:
-            return self.login(user)
-        data = DetailedCodeSerializer({
-            "detail": "Код 2FA неверен.",
-            "code": "INVALID_CODE"
-        }).data
-        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        if not user:
+            data = DetailedCodeSerializer({
+                "detail": "Код 2FA неверен.",
+                "code": "INVALID_CODE"
+            }).data
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+        return self.login(user)
 
 
 class ActivateCryptographicKeyAPIView(APIView):

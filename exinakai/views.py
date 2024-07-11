@@ -16,11 +16,11 @@ from exinakai.services import (
     check_user_perms_to_edit_password,
     create_passwords_collection,
     delete_password,
+    delete_password_collection,
     encrypt_and_save_password,
     generate_random_password_from_request_data,
     get_render_ready_collections,
     get_user_collections,
-    delete_password_collection,
 )
 from users.services import check_is_redirect_url_valid
 
