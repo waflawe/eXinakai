@@ -31,6 +31,27 @@ class CryptographicKeyRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
+class SearchService(object):
+    def make_search(self, queryset: QuerySet, search: Optional[str] = None) -> QuerySet:
+        if not search:
+            return queryset
+
+        if search.startswith(settings.COLLECTION_SEARCH_COMMAND):
+            return self.__make_collection_search(queryset, search.replace(settings.COLLECTION_SEARCH_COMMAND, ""))
+        return self.__make_password_search(queryset, search)
+
+    def __make_collection_search(self, queryset: QuerySet, search: str) -> QuerySet:
+        searchq = search.split(settings.COLLECTION_SEARCH_DELIMITER)
+        collection = searchq[0]
+        queryset = queryset.filter(collection__name__icontains=collection)
+        if len(searchq) > 1:
+            queryset = self.__make_password_search(queryset, searchq[1])
+        return queryset
+
+    def __make_password_search(self, queryset: QuerySet, search: str) -> QuerySet:
+        return queryset.filter(note__icontains=search)
+
+
 class PasswordRender(NamedTuple):
     """Data structure for storing the password in a render-ready form."""
 
@@ -88,21 +109,13 @@ def get_decrypted_password(cryptographic_key: str, password: str) -> str:
     return fernet.decrypt(bytes(password, "utf-8")).decode("utf-8")
 
 
-def get_all_passwords(
-        user: User,
-        search: Optional[str] = None,
-        *,
-        decrypt: Optional[bool] = True,
-        cryptographic_key: Optional[str] = None
-) -> Tuple[PasswordRender, ...] | QuerySet:
+def get_all_passwords(user: User, search: Optional[str] = None) -> QuerySet:
     """
     A service to retrieve all saved user passwords.
 
     :param user: The user whose passwords are to be collected.
     :param search: Search query on password notes.
-    :param decrypt: Whether passwords need to be decrypted.
-    :param cryptographic_key: The key to decrypt passwords, if you need it.
-    :return: QuerySet of encrypted passwords or Tuple of decrypted passwords.
+    :return: QuerySet of encrypted passwords.
     """
 
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
@@ -111,15 +124,7 @@ def get_all_passwords(
     if not queryset:
         queryset = Password.storable.filter(owner=user).select_related("collection")
         cache.set(key, queryset)
-    if search:
-        queryset = queryset.filter(note__icontains=search)
-
-    if decrypt:
-        return tuple(
-            PasswordRender(password, get_decrypted_password(cryptographic_key, password.password))
-            for password in queryset
-        )
-    return queryset
+    return SearchService().make_search(queryset, search)
 
 
 def get_password(**kwargs) -> Password: return get_object_or_404(Password, **kwargs)
@@ -233,9 +238,7 @@ def get_render_ready_collections(user: User, search: str | None, cryptographic_k
             PasswordRender(
                 password,
                 get_decrypted_password(cryptographic_key, password.password)
-            ) for password in (
-                collection.passwords.filter(note__icontains=search).all() if search else collection.passwords.filter()
-            )
+            ) for password in SearchService().make_search(collection.passwords.filter(), search)
         )) for collection in get_user_collections(user)
     )
 
