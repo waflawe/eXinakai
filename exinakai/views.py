@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render
 from django.urls.base import reverse
 from django.views.generic import TemplateView, View
 
-from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm, ChangePasswordCollectionForm
+from exinakai.forms import AddPasswordForm, AddPasswordsCollectionForm, ChangePasswordCollectionForm, UpdatePasswordForm
 from exinakai.services import (
     CryptographicKeyRequiredMixin,
     change_password_collection,
@@ -21,6 +21,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_render_ready_collections,
     get_user_collections,
+    update_password
 )
 from users.services import check_is_redirect_url_valid
 
@@ -40,22 +41,22 @@ class CustomCreateView(LoginRequiredMixin, CryptographicKeyRequiredMixin, View):
 
     def get(self, request: HttpRequest, data: Optional[Dict] = None, error: Optional[bool] = False, **kwargs) \
             -> HttpResponse:
-        return render(request, self.template_name, context=self.get_context(request, data, error))
+        return render(request, self.template_name, context=self.get_context(request, data, error, **kwargs))
 
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
-        form = self.form_class(**self.get_form_kwargs(request), data=request.POST)
+        form = self.form_class(**self.get_form_kwargs(request, **kwargs), data=request.POST)
         if form.is_valid():
             self.form_valid(request, form, *args, **kwargs)
             return redirect(self.get_success_url())
         return self.form_invalid(request, form)
 
-    def get_context(self, request: HttpRequest, data: Dict, error: bool) -> Dict:
+    def get_context(self, request: HttpRequest, data: Dict, error: bool, **kwargs) -> Dict:
         return {
-            "form": self.form_class(**self.get_form_kwargs(request), data=data),
+            "form": self.form_class(**self.get_form_kwargs(request, **kwargs), data=data),
             "error": error
         }
 
-    def get_form_kwargs(self, request: HttpRequest) -> Dict:
+    def get_form_kwargs(self, request: HttpRequest, **kwargs) -> Dict:
         return {}
 
     def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
@@ -72,7 +73,7 @@ class AddPasswordView(CustomCreateView):
     template_name = "exinakai/add_password.html"
     form_class = AddPasswordForm
 
-    def get_form_kwargs(self, request: HttpRequest) -> Dict:
+    def get_form_kwargs(self, request: HttpRequest, **kwargs) -> Dict:
         return {
             "collections": get_user_collections(request.user)
         }
@@ -160,7 +161,7 @@ class ChangePasswordCollectionView(CustomCreateView):
     template_name = "exinakai/change_password_collection.html"
     form_class = ChangePasswordCollectionForm
 
-    def get_form_kwargs(self, request: HttpRequest) -> Dict:
+    def get_form_kwargs(self, request: HttpRequest, **kwargs) -> Dict:
         return {
             "collections": get_user_collections(request.user)
         }
@@ -173,6 +174,26 @@ class ChangePasswordCollectionView(CustomCreateView):
             request.user,
             {"pk": kwargs.get("pk", 0)},
             form.cleaned_data["collection"]
+        )
+
+
+class UpdatePasswordView(CustomCreateView):
+    template_name = "exinakai/update_password.html"
+    form_class = UpdatePasswordForm
+
+    def get_form_kwargs(self, request: HttpRequest, **kwargs) -> Dict:
+        return {
+            "instance": check_user_perms_to_edit_password(request.user, **kwargs)
+        }
+
+    def get_success_url(self) -> str:
+        return f"{reverse('exinakai:all-passwords')}?action=update-password-success"
+
+    def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
+        update_password(
+            request.user,
+            kwargs.pop("pk"),
+            form.cleaned_data["note"]
         )
 
 

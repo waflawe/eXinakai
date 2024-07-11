@@ -307,3 +307,19 @@ def delete_password_collection(
 
     clear_user_cache(user)
     return True
+
+
+def update_password(user: User, pk: int, note: str) -> bool:
+    """
+    Service for update password.
+
+    :param user: User update sender.
+    :param pk: Primary key of the password to update.
+    :param note: New password note.
+    :return: Flag is password updated.
+    """
+
+    password = check_user_perms_to_edit_password(user, pk=pk)
+    password.note = note
+    password.save()
+    return True

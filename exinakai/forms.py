@@ -5,7 +5,7 @@ from django.db.models import QuerySet
 from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
 
-from exinakai.models import PasswordsCollection
+from exinakai.models import PasswordsCollection, Password
 
 User = get_user_model()
 
@@ -24,6 +24,12 @@ class ChangePasswordCollectionForm(forms.Form):
             (collection.id, str(collection)) for collection in collections
         )
         self.fields["collection"].label = _("Коллекция")
+
+
+class UpdatePasswordForm(forms.ModelForm):
+    class Meta:
+        model = Password
+        fields = "note",
 
 
 class AddPasswordForm(ChangePasswordCollectionForm):
