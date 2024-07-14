@@ -9,7 +9,7 @@ class IsUserCryptographicKeyValid(permissions.BasePermission):
         return False
 
 
-class IsUserCanEditCollection(permissions.BasePermission):
+class IsUserCanEditObject(permissions.BasePermission):
     def has_object_permission(self, request: Request, view, obj) -> bool:
         if request.user == obj.owner:
             return True

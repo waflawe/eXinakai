@@ -4,45 +4,6 @@ info:
   version: 1.1.0
   description: Простой, минималистичный и функциональный онлайн менеджер паролей.
 paths:
-  /api/v1/change/password-collection/:
-    post:
-      operationId: change_password_collection_create
-      tags:
-      - change
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordCollection'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordCollection'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordCollection'
-        required: true
-      security:
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Detail'
-          description: ''
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Detail'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Detail'
-          description: ''
   /api/v1/collections/:
     get:
       operationId: collections_list
@@ -338,6 +299,83 @@ paths:
                 $ref: '#/components/schemas/Detail'
           description: ''
   /api/v1/passwords/{id}/:
+    put:
+      operationId: passwords_update
+      description: Updates the collection or note of the password.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - passwords
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdatePassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdatePassword'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Detail'
+          description: ''
+    patch:
+      operationId: passwords_partial_update
+      description: View all saved passwords.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - passwords
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswords'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswords'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPasswords'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Passwords'
+          description: ''
     delete:
       operationId: passwords_destroy
       description: Deleting a password from the database.
@@ -656,16 +694,6 @@ components:
           type: string
       required:
       - token
-    ChangePasswordCollection:
-      type: object
-      properties:
-        pk:
-          type: integer
-        collection:
-          type: integer
-      required:
-      - collection
-      - pk
     CryptographicKey:
       type: object
       properties:
@@ -829,6 +857,26 @@ components:
       - id
       - name
       - time_created
+    PatchedPasswords:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        note:
+          type: string
+          title: Примета
+          maxLength: 256
+        password:
+          type: string
+          readOnly: true
+        collection:
+          type: string
+          readOnly: true
+        time_added:
+          type: object
+          additionalProperties: {}
+          readOnly: true
     RandomPassword:
       type: object
       properties:
@@ -867,6 +915,19 @@ components:
           minLength: 6
       required:
       - code
+    UpdatePassword:
+      type: object
+      properties:
+        note:
+          type: string
+          title: Примета
+          maxLength: 256
+        collection:
+          type: integer
+          nullable: true
+          title: Коллекция
+      required:
+      - note
   securitySchemes:
     cookieAuth:
       type: apiKey

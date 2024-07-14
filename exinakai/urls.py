@@ -9,7 +9,7 @@ from exinakai.views import (
     DeletePasswordView,
     GeneratePasswordView,
     IndexView,
-    UpdatePasswordView
+    UpdatePasswordView,
 )
 
 app_name = "exinakai"

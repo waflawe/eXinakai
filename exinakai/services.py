@@ -71,7 +71,8 @@ class PasswordsCollectionRender:
 def encrypt_and_save_password(
         user: User,
         cryptographic_key: str,
-        password: str, note: str,
+        password: str,
+        note: str,
         collection: Optional[int] = None
 ) -> None:
     """
@@ -86,7 +87,10 @@ def encrypt_and_save_password(
 
     fernet = Fernet(bytes(cryptographic_key, "utf-8"))
     encrypted_password = fernet.encrypt(bytes(password, "utf-8")).decode("utf-8")
-    collection = PasswordsCollection.objects.get(pk=collection)
+    if collection:
+        collection = PasswordsCollection.objects.get(pk=collection)
+    else:
+        collection = get_user_collections(user).filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
     collection.passwords.create(owner=user, note=note, password=encrypted_password, collection=collection)
     key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
     cache.delete(key=key)
@@ -263,18 +267,20 @@ def change_password_collection(user: User, query_params: Mapping, collection: in
     Service to change password collection.
 
     :param user: Owner of password.
-    :param query_params: Mapping with pk of password.
+    :param query_params: Mapping with pk of password or just password.
     :param collection: New password collection.
     """
 
-    password = check_user_perms_to_edit_password(user, pk=query_params.get("pk", 0))
+    pk = query_params.get("pk")
+    password = check_user_perms_to_edit_password(user, pk=pk) if pk else query_params.get("password", None)
     collection = get_object_or_404(PasswordsCollection, pk=collection)
 
-    old_collection = password.collection
-    password.collection = collection
-    password.save()
-    old_collection.passwords.remove(password)
-    collection.passwords.add(password)
+    with transaction.atomic():
+        old_collection = password.collection
+        password.collection = collection
+        password.save()
+        old_collection.passwords.remove(password)
+        collection.passwords.add(password)
 
     clear_user_cache(user)
     return
@@ -309,17 +315,16 @@ def delete_password_collection(
     return True
 
 
-def update_password(user: User, pk: int, note: str) -> bool:
+def update_password(password: Password | int, note: str, user: Optional[User] = None) -> None:
     """
     Service for update password.
 
-    :param user: User update sender.
-    :param pk: Primary key of the password to update.
-    :param note: New password note.
-    :return: Flag is password updated.
+    :param password: Password object or promary key.
+    :param note: New password note
+    :param user: Optional parameter with user if we need to check his perms on the password edition.
     """
 
-    password = check_user_perms_to_edit_password(user, pk=pk)
+    password = check_user_perms_to_edit_password(user, pk=password) if user else password
     password.note = note
     password.save()
-    return True
+    return

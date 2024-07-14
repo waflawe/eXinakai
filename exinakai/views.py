@@ -21,7 +21,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_render_ready_collections,
     get_user_collections,
-    update_password
+    update_password,
 )
 from users.services import check_is_redirect_url_valid
 
@@ -191,9 +191,9 @@ class UpdatePasswordView(CustomCreateView):
 
     def form_valid(self, request: HttpRequest, form: BaseForm, *args, **kwargs) -> None:
         update_password(
-            request.user,
             kwargs.pop("pk"),
-            form.cleaned_data["note"]
+            form.cleaned_data["note"],
+            request.user
         )
 
 

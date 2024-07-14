@@ -17,10 +17,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.permissions import IsUserCanEditCollection, IsUserCryptographicKeyValid
+from api.permissions import IsUserCanEditObject, IsUserCryptographicKeyValid
 from api.serializers import (
     AuthTokenSerializer,
-    ChangePasswordCollectionSerializer,
     CryptographicKeySerializer,
     DetailedCodeSerializer,
     DetailSerializer,
@@ -29,6 +28,7 @@ from api.serializers import (
     RandomPasswordSerializer,
     SettingsSerializer,
     TwoFactorAuthenticationCodeSerializer,
+    UpdatePasswordSerializer,
 )
 from exinakai.services import (
     change_password_collection,
@@ -37,6 +37,7 @@ from exinakai.services import (
     generate_random_password_from_request_data,
     get_all_passwords,
     get_user_collections,
+    update_password,
 )
 from users.services import (
     is_cryptographic_key_valid,
@@ -240,17 +241,18 @@ class UpdateSettingsAPIView(APIView):
 class PasswordViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
     """View all saved passwords."""
 
     lookup_url_kwarg = "pk"
-    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditObject)
     serializer_class = PasswordsSerializer
 
     def get_queryset(self) -> QuerySet:
-        return get_all_passwords(self.request.user, self.request.GET.get("search", None), decrypt=False)
+        return get_all_passwords(self.request.user, self.request.GET.get("search", None))
 
     @extend_schema(request=PasswordsSerializer, responses={
         status.HTTP_201_CREATED: DetailSerializer,
@@ -259,14 +261,45 @@ class PasswordViewSet(
     def create(self, request: Request, *args, **kwargs) -> Response:
         """Saves the new password to the database."""
 
-        super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         data = DetailSerializer({"detail": "Пароль добавлен успешно."}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer: PasswordsSerializer) -> None:
         cryptographic_key = self.request.session["cryptographic_key"]
         password, note = serializer.initial_data["password"], serializer.initial_data["note"]
-        encrypt_and_save_password(self.request.user, cryptographic_key, password, note)
+        collection = serializer.initial_data.get("collection", None)
+        encrypt_and_save_password(self.request.user, cryptographic_key, password, note, collection)
+
+    @extend_schema(request=UpdatePasswordSerializer, responses={
+        status.HTTP_200_OK: DetailSerializer,
+        status.HTTP_403_FORBIDDEN: DetailSerializer,
+        status.HTTP_404_NOT_FOUND: DetailSerializer
+    })
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        """Updates the collection or note of the password."""
+
+        super().update(request, *args, **kwargs)
+        data = DetailSerializer({"detail": "Пароль обновлен успешно."}).data
+        return Response(data, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer: PasswordsSerializer):
+        password = self.get_object()
+        note = serializer.validated_data.get("note", False)
+        collection = int(serializer.initial_data.get("collection", 0))
+        if note:
+            update_password(
+                password,
+                note
+            )
+        if collection:
+            change_password_collection(
+                self.request.user,
+                {"password": password},
+                collection
+            )
 
     @extend_schema(responses={
         status.HTTP_204_NO_CONTENT: DetailSerializer,
@@ -309,7 +342,7 @@ class PasswordsCollectionViewSet(
     """View all passwords collections."""
 
     lookup_url_kwarg = "pk"
-    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditCollection)
+    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditObject)
     serializer_class = PasswordsCollectionSerializer
 
     def get_queryset(self) -> QuerySet:
@@ -347,22 +380,3 @@ class PasswordsCollectionViewSet(
             return Response(data, status=status.HTTP_204_NO_CONTENT)
         data = DetailSerializer({"detail": "Эту коллекцию нельзя удалить."}).data
         return Response(data, status=status.HTTP_403_FORBIDDEN)
-
-
-class ChangePasswordCollectionAPIView(APIView):
-    serializer_class = ChangePasswordCollectionSerializer
-    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid)
-
-    @extend_schema(responses={
-        status.HTTP_200_OK: DetailSerializer,
-        status.HTTP_403_FORBIDDEN: DetailSerializer,
-        status.HTTP_404_NOT_FOUND: DetailSerializer
-    })
-    def post(self, request: Request, *args, **kwargs) -> Response:
-        change_password_collection(
-            request.user,
-            request.data,
-            request.data.get("collection", 0)
-        )
-        data = DetailSerializer({"detail": "Коллекция пароля изменена успешно."}).data
-        return Response(data, status=status.HTTP_200_OK)

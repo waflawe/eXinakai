@@ -5,7 +5,7 @@ from django.db.models import QuerySet
 from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
 
-from exinakai.models import PasswordsCollection, Password
+from exinakai.models import Password, PasswordsCollection
 
 User = get_user_model()
 
