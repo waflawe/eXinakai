@@ -80,8 +80,9 @@ you can add a note to it.
 
 If the encryption key is correct, you can perform the following actions with passwords:
 1. Creating passwords
-2. Read passwords and search by their notes
-3. Deleting passwords  
+2. Reading passwords and searching by their notes and collections
+3. updating a password's note or collection
+4. Deleting passwords  
 
 Also `eXinakai` has a convenient collection system for passwords. It allows you to collect a set of an unlimited number 
 of passwords in one place, which allows you to better navigate the manager when there are not a few of them. Within the 
