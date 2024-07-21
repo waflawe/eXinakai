@@ -14,3 +14,6 @@ dj-rest-auth==6.0.0
 drf-spectacular==0.27.2
 psycopg2-binary==2.9.9
 django-redis==5.4.0
+pytest==8.2.2
+pytest-django==4.8.0
+pytest-factoryboy==2.7.0

@@ -6,3 +6,6 @@ venv/
 media/avatars/
 test.py
 .env.docker
+tests/test_api
+tests/test_exinakai
+tests/test_users
