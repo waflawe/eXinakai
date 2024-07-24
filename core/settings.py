@@ -11,6 +11,7 @@ import datetime
 import os
 from pathlib import Path
 
+from cryptography.fernet import Fernet
 from environ import Env
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -163,6 +164,10 @@ CACHES = {
 DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES = ":"
 ALL_USER_PASSWORDS_CACHE_NAME = "passwords"
 ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME = "collections"
+
+# TESTS
+TESTER_USERNAME = "PASSWORDS_TESTER"
+TESTER_CRYPTOGRAPHIC_KEY = Fernet.generate_key().decode("utf-8")
 
 # REST FRAMEWORK
 REST_FRAMEWORK = {

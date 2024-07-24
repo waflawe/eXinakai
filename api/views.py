@@ -32,6 +32,7 @@ from api.serializers import (
 )
 from exinakai.services import (
     change_password_collection,
+    delete_password,
     delete_password_collection,
     encrypt_and_save_password,
     generate_random_password_from_request_data,
@@ -292,7 +293,8 @@ class PasswordViewSet(
         if note:
             update_password(
                 password,
-                note
+                note,
+                self.request.user
             )
         if collection:
             change_password_collection(
@@ -311,6 +313,12 @@ class PasswordViewSet(
         super().destroy(request, *args, **kwargs)
         data = DetailSerializer({"detail": "Пароль удален успешно."}).data
         return Response(data, status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        delete_password(
+            self.request.user,
+            password=instance
+        )
 
 
 class GeneratePasswordAPIView(APIView):

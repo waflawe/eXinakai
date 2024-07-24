@@ -149,24 +149,6 @@ def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
     return password
 
 
-def delete_password(user: User, **kwargs) -> None:
-    """
-    Service for deleting passwords from the database.
-
-    :param user: User to verify permissions.
-    :param kwargs: Password identifiers (like pk, note, and others).
-    """
-
-    password = check_user_perms_to_edit_password(user, **kwargs)
-    password.delete()
-    key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
-    cache.delete(key=key)
-    key = (f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-           f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
-    cache.delete(key=key)
-    return
-
-
 def generate_random_password_from_request_data(request_data: Mapping) -> tuple[str, KeysView, int]:
     """
     Service for random password generation according to user filters.
@@ -315,16 +297,33 @@ def delete_password_collection(
     return True
 
 
-def update_password(password: Password | int, note: str, user: Optional[User] = None) -> None:
+def update_password(password: Password | int, note: str, user: User) -> None:
     """
     Service for update password.
 
     :param password: Password object or promary key.
     :param note: New password note
-    :param user: Optional parameter with user if we need to check his perms on the password edition.
+    :param user: User needs to check his perms on the password edition.
     """
 
-    password = check_user_perms_to_edit_password(user, pk=password) if user else password
+    password = password if isinstance(password, Password) else check_user_perms_to_edit_password(user, pk=password)
     password.note = note
     password.save()
+
+    clear_user_cache(user)
+    return
+
+
+def delete_password(user: User, **kwargs) -> None:
+    """
+    Service for deleting passwords from the database.
+
+    :param user: User to verify permissions.
+    :param kwargs: Password identifiers (like pk, note, password instance and others).
+    """
+
+    password = kwargs["password"] if kwargs.get("password", None) else check_user_perms_to_edit_password(user, **kwargs)
+    password.delete()
+
+    clear_user_cache(user)
     return

@@ -1,8 +1,8 @@
 import factory
 import faker
-
 from django.contrib.auth import get_user_model
-from exinakai.models import PasswordsCollection, Password
+
+from exinakai.models import Password, PasswordsCollection
 
 User = get_user_model()
 
@@ -10,10 +10,11 @@ User = get_user_model()
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
+        django_get_or_create = 'username',
 
     username = factory.LazyFunction(lambda: faker.Faker().user_name())
-    email = factory.Faker("email")
-    password = factory.Faker("password")
+    email = factory.LazyFunction(lambda: faker.Faker().email())
+    password = factory.LazyFunction(lambda: faker.Faker().password())
 
 
 class PasswordsCollectionFactory(factory.django.DjangoModelFactory):
@@ -31,4 +32,4 @@ class PasswordFactory(factory.django.DjangoModelFactory):
     note = factory.LazyFunction(lambda: faker.Faker().user_name())
     owner = factory.SubFactory(UserFactory)
     collection = factory.SubFactory(PasswordsCollectionFactory)
-    password = factory.Faker("password")
+    password = factory.LazyFunction(lambda: faker.Faker().password())

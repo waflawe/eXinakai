@@ -16,6 +16,8 @@ from api.views import (
     UserTwoFactorAuthenticationAPIView,
 )
 
+app_name = "api"
+
 router = SimpleRouter()
 router.register(r"passwords", PasswordViewSet, basename="passwords")
 router.register(r"collections", PasswordsCollectionViewSet, basename="collections")
@@ -31,7 +33,6 @@ urlpatterns = [
     path('password/reset/', PasswordResetAPIView.as_view(), name='password-reset'),
     path('password/reset/confirm/', PasswordResetConfirmAPIView.as_view(), name='password-reset-confirm'),
     path('password/change/', PasswordChangeAPIView.as_view(), name='password-change'),
-
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('schema/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger'),
+    path('schema/docs/', SpectacularSwaggerView.as_view(url_name='api:schema'), name="schema-docs"),
 ]
