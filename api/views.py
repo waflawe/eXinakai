@@ -32,6 +32,7 @@ from api.serializers import (
 )
 from exinakai.services import (
     change_password_collection,
+    clear_user_cache,
     delete_password,
     delete_password_collection,
     encrypt_and_save_password,
@@ -366,11 +367,13 @@ class PasswordsCollectionViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(owner=request.user)
+        clear_user_cache(request.user)
         data = DetailSerializer({"detail": "Коллекция добавлена успешно."}).data
         return Response(data, status=status.HTTP_201_CREATED)
 
     @extend_schema(responses={
         status.HTTP_204_NO_CONTENT: DetailSerializer,
+        status.HTTP_403_FORBIDDEN: DetailSerializer,
         status.HTTP_404_NOT_FOUND: DetailSerializer
     })
     def destroy(self, request: Request, *args, **kwargs) -> Response:

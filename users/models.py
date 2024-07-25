@@ -8,7 +8,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-def get_uploaded_avatar_path(instance: 'ExinakaiUser', filename: str) -> str:
+def get_uploaded_avatar_path(instance: Optional['ExinakaiUser'] = None, filename: Optional[str] = None) -> str:
     return f"{settings.CUSTOM_USER_AVATARS_DIR}/{filename}"
 
 
