@@ -7,6 +7,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
+import string
 from pytz import common_timezones
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -21,7 +22,7 @@ class TestsMixin(object):
     activate_key_endpoint = reverse_lazy("api:activate-key")
     endpoint = None
 
-    tests_count = 3  # 1 to 20 only (pagination limit)
+    tests_count = 3  # 1 to 20 only if test tests data arrays (pagination limit)
 
     def get_authenticated_client(self, client: APIClient, authenticate_as: User, cryptographic_key: str) -> APIClient:
         client.force_authenticate(user=authenticate_as)
@@ -75,14 +76,14 @@ class TestPasswordsViews(TestsMixin):
         for db_password, password in zip(db_passwords[::-1], passwords):
             assert db_password["note"] == password.note
         new_collection = passwords_collection_factory(owner=passwords_tester, name=self.edited_collection_name)
-        for counter, password in zip(range(1, self.tests_count+1), edited_passwords):
+        for counter, password in zip(range(1, self.tests_count + 1), edited_passwords):
             data = {"note": password.note, "collection": new_collection.pk}
             self.send_unsafe_request(client, "patch", self.endpoint + f"{counter}/", data)
         db_passwords = self.get_and_check_objects_in_db(client)
         for db_password, password in zip(db_passwords[::-1], edited_passwords):
             assert db_password["note"] == password.note
             assert db_password["collection"] == self.edited_collection_name
-        for counter in range(1, self.tests_count+1):
+        for counter in range(1, self.tests_count + 1):
             self.send_unsafe_request(client, "delete", self.endpoint + f"{counter}/", {}, status.HTTP_204_NO_CONTENT)
         self.get_and_check_objects_in_db(client, 0)
 
@@ -151,3 +152,39 @@ class TestAccountSettings(TestsMixin):
         assert content["avatar"] == avatar
         assert content["timezone"] == timezone
         assert content["is_2fa_enabled"] is is_2fa_enabled
+
+
+class TestPasswordsGeneration(TestsMixin):
+    endpoint = reverse_lazy("api:passwords-generate")
+
+    def test_passwords_generation(
+            self,
+            api_client: typing.Type[APIClient],
+            user_factory: typing.Type[UserFactory],
+            cryptographic_key: str
+    ):
+        user = user_factory()
+        client = self.get_authenticated_client(api_client(), user, cryptographic_key)
+        for counter in range(self.tests_count):
+            length = self.get_password_length()
+            symbols = list(self.get_password_symbols().values())
+            symbols_query = "&".join(f"{i}=True" for i in symbols)
+            res = client.get(f"{self.endpoint}?length={length}&{symbols_query}")
+            assert res.status_code == status.HTTP_200_OK
+            password = json.loads(res.content)["password"]
+            assert len(password) == length
+            valid_values = "".join(
+                getattr(string, symbol, getattr(string, "ascii_" + symbol, "")) for symbol in symbols
+            )
+            for symbol in password:
+                assert symbol in valid_values
+
+    def get_password_length(self) -> int: return random.randrange(8, 32 + 1)
+
+    def get_password_symbols(self):
+        default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
+        keys = list(default_characters.keys())
+        symbols = []
+        for _ in range(1, random.randrange(2, 4 + 1)):
+            symbols.append(random.choice(keys))
+        return {symbol: default_characters[symbol] for symbol in symbols}

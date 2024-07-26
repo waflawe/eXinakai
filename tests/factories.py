@@ -12,7 +12,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = User
         django_get_or_create = 'username',
 
-    username = factory.LazyFunction(lambda: faker.Faker().user_name())
+    username = factory.LazyFunction(lambda: faker.Faker().user_name()[:16])
     email = factory.LazyFunction(lambda: faker.Faker().email())
     password = factory.LazyFunction(lambda: faker.Faker().password())
 

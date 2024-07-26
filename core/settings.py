@@ -188,7 +188,7 @@ TOKEN_TTL = datetime.timedelta(hours=int(env("DJANGO_TOKEN_TTL")))
 # dj-rest-auth
 REST_AUTH = {
     "PASSWORD_RESET_SERIALIZER": "api.serializers.PasswordResetSerializer",
-    "OLD_PASSWORD_FIELD_ENABLED": True
+    "OLD_PASSWORD_FIELD_ENABLED": False
 }
 
 # drf-spectacular
