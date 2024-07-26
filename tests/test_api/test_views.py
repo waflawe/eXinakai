@@ -188,3 +188,25 @@ class TestPasswordsGeneration(TestsMixin):
         for _ in range(1, random.randrange(2, 4 + 1)):
             symbols.append(random.choice(keys))
         return {symbol: default_characters[symbol] for symbol in symbols}
+
+
+class TestAccountPasswordChange(TestsMixin):
+    endpoint = reverse_lazy("api:password-change")
+
+    def test_account_password_change(
+            self,
+            api_client: typing.Type[APIClient],
+            user_factory: typing.Type[UserFactory],
+            cryptographic_key: str
+    ):
+        for _ in range(self.tests_count):
+            old_password, new_password = user_factory.build().password, user_factory.build().password
+            user = user_factory(password=old_password)
+            assert user.check_password(old_password) is False
+            client = self.get_authenticated_client(api_client(), user, cryptographic_key)
+            data = {
+                "new_password1": new_password,
+                "new_password2": new_password
+            }
+            self.send_unsafe_request(client, "post", data=data)
+            assert user.check_password(new_password) is True
