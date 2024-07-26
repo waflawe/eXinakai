@@ -6,7 +6,7 @@ import typing
 
 import pytest
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.urls import reverse_lazy
 from pytz import common_timezones
 from rest_framework import status
@@ -200,13 +200,14 @@ class TestAccountPasswordChange(TestsMixin):
             cryptographic_key: str
     ):
         for _ in range(self.tests_count):
-            old_password, new_password = user_factory.build().password, user_factory.build().password
-            user = user_factory(password=old_password)
-            assert user.check_password(old_password) is False
+            username = user_factory.stub().username
+            old_password, new_password = user_factory.stub().password, user_factory.stub().password
+            user = user_factory.create(username=username, password=old_password)
+            assert authenticate(username=username, password=new_password) is None
             client = self.get_authenticated_client(api_client(), user, cryptographic_key)
             data = {
                 "new_password1": new_password,
                 "new_password2": new_password
             }
             self.send_unsafe_request(client, "post", data=data)
-            assert user.check_password(new_password) is True
+            assert authenticate(username=username, password=new_password) is not None
