@@ -1,13 +1,13 @@
 import json
 import os
 import random
+import string
 import typing
 
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
-import string
 from pytz import common_timezones
 from rest_framework import status
 from rest_framework.test import APIClient
