@@ -15,7 +15,7 @@ register(PasswordsCollectionFactory)
 register(PasswordFactory)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def api_client() -> typing.Type[APIClient]:
     return APIClient
 
@@ -25,6 +25,6 @@ def passwords_tester() -> User:
     return UserFactory(username=settings.TESTER_USERNAME)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def cryptographic_key() -> str:
     return settings.TESTER_CRYPTOGRAPHIC_KEY

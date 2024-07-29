@@ -1,3 +1,4 @@
+import enum
 import json
 import os
 import random
@@ -24,6 +25,13 @@ class TestsMixin(object):
 
     tests_count = 3  # 1 to 20 only if test tests data arrays (pagination limit)
 
+    class UnsafeMethos(enum.StrEnum):
+        POST = "post"
+        PATCH = "patch"
+        DELETE = "delete"
+
+    UNSAFE_METHODS = UnsafeMethos
+
     def get_authenticated_client(self, client: APIClient, authenticate_as: User, cryptographic_key: str) -> APIClient:
         client.force_authenticate(user=authenticate_as)
         res = client.post(self.activate_key_endpoint, {"cryptographic_key": cryptographic_key})
@@ -41,15 +49,18 @@ class TestsMixin(object):
         res = getattr(client, method)(url or self.endpoint, data)
         assert res.status_code == status__
 
-    def create_and_get_testing_objects(self, factory: typing.Callable) -> typing.Tuple[typing.List, typing.List]:
-        instances = factory.build_batch(self.tests_count * 2)
+    def create_and_get_testing_objects(
+            self,
+            factory: typing.Type[typing.Union[PasswordsCollectionFactory | PasswordFactory]]
+    ) -> typing.Tuple[typing.List, typing.List]:
+        instances = factory.stub_batch(self.tests_count * 2)
         return instances[:self.tests_count], instances[self.tests_count:]
 
     def get_and_check_objects_in_db(self, client: APIClient, needed_len: typing.Optional[int] = None) -> typing.List:
         res = client.get(self.endpoint)
         assert res.status_code == status.HTTP_200_OK
         db_passwords = json.loads(res.content)["results"]
-        assert len(db_passwords) == needed_len if needed_len else self.tests_count
+        assert len(db_passwords) == needed_len or self.tests_count
         return db_passwords
 
 
@@ -71,20 +82,21 @@ class TestPasswordsViews(TestsMixin):
         passwords, edited_passwords = self.create_and_get_testing_objects(password_factory)
         for password in passwords:
             data = {"note": password.note, "password": password.password}
-            self.send_unsafe_request(client, "post", data=data, status__=status.HTTP_201_CREATED)
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.POST, data=data, status__=status.HTTP_201_CREATED)
         db_passwords = self.get_and_check_objects_in_db(client)
         for db_password, password in zip(db_passwords[::-1], passwords):
             assert db_password["note"] == password.note
         new_collection = passwords_collection_factory(owner=passwords_tester, name=self.edited_collection_name)
         for counter, password in zip(range(1, self.tests_count + 1), edited_passwords):
             data = {"note": password.note, "collection": new_collection.pk}
-            self.send_unsafe_request(client, "patch", self.endpoint + f"{counter}/", data)
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.PATCH, self.endpoint + f"{counter}/", data)
         db_passwords = self.get_and_check_objects_in_db(client)
         for db_password, password in zip(db_passwords[::-1], edited_passwords):
             assert db_password["note"] == password.note
             assert db_password["collection"] == self.edited_collection_name
         for counter in range(1, self.tests_count + 1):
-            self.send_unsafe_request(client, "delete", self.endpoint + f"{counter}/", {}, status.HTTP_204_NO_CONTENT)
+            url = self.endpoint + f"{counter}/"
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.DELETE, url, status__=status.HTTP_204_NO_CONTENT)
         self.get_and_check_objects_in_db(client, 0)
 
 
@@ -101,13 +113,15 @@ class TestPasswordsCollectionsViews(TestsMixin):
         client = self.get_authenticated_client(api_client(), passwords_tester, cryptographic_key)
         collections, _ = self.create_and_get_testing_objects(passwords_collection_factory)
         for collection in collections:
-            self.send_unsafe_request(client, "post", data={"name": collection.name}, status__=status.HTTP_201_CREATED)
+            data = {"name": collection.name}
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.POST, data=data, status__=status.HTTP_201_CREATED)
         db_collections = self.get_and_check_objects_in_db(client)
         for db_collection, collection in zip(db_collections, collections):
             assert db_collection["name"] == collection.name
         for collection in db_collections:
             counter = collection['id']
-            self.send_unsafe_request(client, "delete", self.endpoint + f"{counter}/", {}, status.HTTP_204_NO_CONTENT)
+            url = self.endpoint + f"{counter}/"
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.DELETE, url, status__=status.HTTP_204_NO_CONTENT)
         self.get_and_check_objects_in_db(client, 0)
 
 
@@ -137,7 +151,7 @@ class TestAccountSettings(TestsMixin):
                     "timezone": random.choice(common_timezones),
                     "is_2fa_enabled": True
                 }
-                self.send_unsafe_request(client, "post", data=data)
+                self.send_unsafe_request(client, self.UNSAFE_METHODS.POST, data=data)
             self.check_user_settings(
                 client,
                 settings.MEDIA_URL + str(user.avatar),
@@ -181,7 +195,7 @@ class TestPasswordsGeneration(TestsMixin):
 
     def get_password_length(self) -> int: return random.randrange(8, 32 + 1)
 
-    def get_password_symbols(self):
+    def get_password_symbols(self) -> typing.Dict[str, str]:
         default_characters = {"l": "lowercase", "u": "uppercase", "d": "digits", "p": "punctuation"}
         keys = list(default_characters.keys())
         symbols = []
@@ -203,11 +217,11 @@ class TestAccountPasswordChange(TestsMixin):
             username = user_factory.stub().username
             old_password, new_password = user_factory.stub().password, user_factory.stub().password
             user = user_factory.create(username=username, password=old_password)
-            assert authenticate(username=username, password=new_password) is None
+            assert not authenticate(username=username, password=new_password)
             client = self.get_authenticated_client(api_client(), user, cryptographic_key)
             data = {
                 "new_password1": new_password,
                 "new_password2": new_password
             }
-            self.send_unsafe_request(client, "post", data=data)
-            assert authenticate(username=username, password=new_password) is not None
+            self.send_unsafe_request(client, self.UNSAFE_METHODS.POST, data=data)
+            assert authenticate(username=username, password=new_password)
