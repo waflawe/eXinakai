@@ -199,13 +199,3 @@ class UpdatePasswordView(CustomCreateView):
 
 class GeneratePasswordView(TemplateView):
     template_name = "exinakai/exinakai_generate_password.html"
-
-    def get_context_data(self, **kwargs) -> Dict:
-        context = super().get_context_data(**kwargs)
-
-        random_password, submited_sumbols, length = generate_random_password_from_request_data(self.request.GET)
-        context["random_password"] = random_password
-        context["submited_sumbols"] = submited_sumbols
-        context["length"] = length
-
-        return context
