@@ -1,7 +1,6 @@
 from dj_rest_auth.serializers import (
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
-    PasswordResetSerializer,
 )
 from dj_rest_auth.views import PasswordChangeView as PasswordChangeViewCore
 from dj_rest_auth.views import PasswordResetConfirmView as PasswordResetConfirmViewCore
@@ -29,6 +28,7 @@ from api.serializers import (
     SettingsSerializer,
     TwoFactorAuthenticationCodeSerializer,
     UpdatePasswordSerializer,
+    PasswordResetSerializer
 )
 from exinakai.services import (
     change_password_collection,

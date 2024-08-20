@@ -149,6 +149,12 @@ class ResetPasswordView(PasswordResetView):
     def get_success_url(self) -> str:
         return f"{reverse('exinakai:index')}?action=password-reset-done"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["hide_form"] = True
+        context["api_reset_url"] = reverse("api:password-reset")
+        return context
+
 
 class ConfirmPasswordResetView(PasswordResetConfirmView):
     template_name = 'users/password_reset_confirm.html'

@@ -10,10 +10,14 @@
                         {% block form_header %}
                         {% endblock %}
                     </div>
-                    {% block form_errors %}
-                    {% endblock %}
+                    <div id="errors">
+                        {% block form_errors %}
+                        {% endblock %}
+                    </div>
                     <div class="card-body">
-                        <form method="POST">
+                        {% if not hide_form %}
+                            <form method="POST">
+                         {% endif %}
                             {% csrf_token %}
                             {% for i in form %}
                             <div class="doubleindent mb-3 row">
@@ -27,7 +31,9 @@
                             {% endfor %}
                             {% block form_button %}
                             {% endblock %}
-                        </form>
+                        {% if not hide_form %}
+                            </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
