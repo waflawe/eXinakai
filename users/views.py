@@ -47,7 +47,7 @@ class SingUpView(CreateView):
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         super().get(request, *args, **kwargs)
         context = {
-            "bad_details": kwargs.get("bad_details", False)
+            "error": kwargs.get("bad_details", False)
         }
         return self.render_to_response(self.get_context_data(**context))
 
@@ -79,7 +79,7 @@ class LoginView(View):
         context = {
             "form": form,
             "action": request.GET.get("action", None),
-            "bad_details": True if data else False
+            "error": True if data else False
         }
         return render(request, "users/login.html", context=context)
 
@@ -110,7 +110,7 @@ class TwoFactorAuthenticationView(View):
         if user:
             login(request, user)
             return redirect(reverse('accounts:activate-cryptographic-key'))
-        return self.get(request, {"bad_code": True})
+        return self.get(request, {"error": True})
 
 
 class ActivateCryptographicKeyView(LoginRequiredMixin, CryptographicKeyEmptyRequiredMixin, FormView):
@@ -198,7 +198,7 @@ class SettingsView(LoginRequiredMixin, View):
             self.check_is_timezone_and_email_updated(form.instance, old_timezone, old_email)
             form.instance.save(update_fields=["email", "avatar", "timezone", "is_2fa_enabled"])
             process_avatar_and_email_if_updated(form.instance, old_avatar_path, old_email)
-            return redirect(f"{reverse('accounts:settings')}?action=settings-updated")
+            return redirect(f"{reverse('exinakai:all-passwords')}?action=settings-updated")
         return self.get(request, True)
 
     def check_is_timezone_and_email_updated(self, user: User, old_timezone: str, old_email: str) -> None:

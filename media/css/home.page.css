@@ -1,0 +1,12 @@
+.message {
+    margin: auto;
+    margin-top: 70px;
+    text-align: center;
+    width: 80%;
+    border-radius: 20px;
+    padding: 10px;
+}
+
+.username {
+    font-weight: bold;
+}

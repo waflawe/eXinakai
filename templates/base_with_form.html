@@ -11,8 +11,13 @@
                         {% endblock %}
                     </div>
                     <div id="errors">
-                        {% block form_errors %}
-                        {% endblock %}
+                        {% if error %}
+                            <div class="alert alert-danger alert-dismissible d-ml d-mr" role="alert">
+                                <div id="form_errors">
+                                    <strong>{% block error_message %}{% endblock %}</strong>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="card-body">
                         {% if not hide_form %}
@@ -20,16 +25,19 @@
                          {% endif %}
                             {% csrf_token %}
                             {% for i in form %}
-                            <div class="doubleindent mb-3 row">
+                            <div class="d-i mb-3 row">
                               <label class="col-form-label">{{i.label}}:</label>
-                                <div class="col-sm-10">
+                                <div class="col-sm-9">
                                   {{i}}
                                 </div>
                                 {% block form_afterfield %}
                                 {% endblock %}
                             </div>
                             {% endfor %}
-                            {% block form_button %}
+                            {% block before_button %}
+                            {% endblock %}
+                            <button type="submit" class="btn btn-default d-ml" id="{% block button_id %}submit{% endblock %}">{% block button %}Сохранить{% endblock %}</button>
+                            {% block after_button %}
                             {% endblock %}
                         {% if not hide_form %}
                             </form>

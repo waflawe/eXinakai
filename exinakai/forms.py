@@ -2,17 +2,11 @@ from django import forms
 from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
-from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
 
 from exinakai.models import Password, PasswordsCollection
 
 User = get_user_model()
-
-
-class CustomPasswordInput(forms.PasswordInput):
-    def get_context(self, name, value, attrs):
-        return Input().get_context(name, value, attrs)
 
 
 class ChangePasswordCollectionForm(forms.Form):
@@ -35,16 +29,17 @@ class UpdatePasswordForm(forms.ModelForm):
 class AddPasswordForm(ChangePasswordCollectionForm):
     note = forms.CharField(
         label=_("Примета"),
-        max_length=256
+        max_length=256,
+        widget=forms.TextInput(attrs={"placeholder": "Примета пароля"})
     )
     password1 = forms.CharField(
         label=_("Пароль"),
-        widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=forms.TextInput(attrs={"autocomplete": "new-password", "placeholder": "Пароль"}),
         strip=False
     )
     password2 = forms.CharField(
         label=_("Подтверждение пароля"),
-        widget=CustomPasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=forms.TextInput(attrs={"autocomplete": "new-password", "placeholder": "Повтор пороля"}),
         strip=False
     )
 
@@ -64,3 +59,7 @@ class AddPasswordsCollectionForm(forms.ModelForm):
     class Meta:
         model = PasswordsCollection
         fields = "name",
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].widget = forms.TextInput(attrs={"placeholder": "Название коллекции"})

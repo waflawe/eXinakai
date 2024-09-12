@@ -1,5 +1,9 @@
 {% extends 'base_with_form.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/forms.min.css">
+{% endblock %}
+
 {% block title %}
 Активация ключа шифрования
 {% endblock %}
@@ -7,15 +11,9 @@
 {% block form_header %}
 <h3 class="font-weight-light my-4 text-center">Активируйте ключ</h3>
 {% endblock %}
-{% block form_errors %}
-{% if bad_key %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <div id="form_errors">
-            <strong>Неверный ключ шифрования</strong>
-        </div>
-    </div>
-{% endif %}
+{% block error_message %}
+Неверный ключ шифрования.
 {% endblock %}
-{% block form_button %}
-<button type="submit" class="btn btn-primary doublemarginleft">Активировать</button>
+{% block button %}
+Активировать
 {% endblock %}

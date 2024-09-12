@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/success.sing.up.css">
+{% endblock %}
+
 {% block title %}
-:)
+!!
 {% endblock %}
 
 {% block body %}
-<span style="text-align: center;">
+<div class="center">
     <h2>Регистрация прошла успешно!</h2>
     <h4>Вот Ваш ключ для добавления, чтения и удаления паролей:</h4>
-    <br>
-    <h2>{{crypto_key}}</h2>
-    <br>
-    <h4>Обязательно сохраните этот ключ и не давайте его никому!!</h4>
-</span>
+    <h2 id="key">{{crypto_key}}</h2>
+    <h4 class="commented">Обязательно сохраните этот ключ и не давайте его никому!!</h4>
+</div>
 {% endblock %}

@@ -1,22 +1,25 @@
 {% extends 'base.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/home.page.css">
+{% endblock %}
+
 {% block title %}
 +~ eXinakai ~+
 {% endblock %}
 
 {% block body %}
 {% if action %}
-    <br>
-    <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-        <h5 class="indent">
+    <div class="bg-info bg-opacity-10 border border-info message">
+        <h5>
             {% if action == "activate-cryptographic-key-success" and request.user.is_authenticated %}
-                {{request.user}}, Вы успешно активировали ключ шифрования.
+                <span class="username">{{request.user}}</span>, Вы успешно активировали ключ шифрования.
             {% elif action == "logout" %}
                 Вы успешно вышли из системы.
             {% elif action == "settings-updated" and request.user.is_authenticated %}
-                Настройки успешно обновлены.
+                <span class="username">{{request.user}}</span>, настройки успешно обновлены.
             {% elif action == "password-change-done" and request.user.is_authenticated %}
-                Пароль изменен успешно.
+                <span class="username">{{request.user}}</span>, пароль изменен успешно.
             {% elif action == 'password-reset-done' %}
                 Ссылка для сброса пароля отправлена на почту.
             {% elif action == 'password-reset-complete' %}
@@ -25,6 +28,8 @@
         </h5>
     </div>
 {% endif %}
+{% if not action %}
 <br>
-<h1 class="indent">Добро пожаловать в eXinakai!</h1>
+{% endif %}
+<h1 class="text-center">Добро пожаловать в eXinakai!</h1>
 {% endblock %}

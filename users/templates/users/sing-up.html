@@ -1,5 +1,9 @@
 {% extends 'base_with_form.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/forms.min.css">
+{% endblock %}
+
 {% block title %}
 Регистрация
 {% endblock %}
@@ -7,18 +11,9 @@
 {% block form_header %}
 <h3 class="font-weight-light my-4 text-center">Регестрация в eXinakai!</h3>
 {% endblock %}
-{% block form_errors %}
-{% if bad_details %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <div id="form_errors">
-            <strong>Некоторые поля заполнены неверно.</strong>
-        </div>
-    </div>
-{% endif %}
+{% block error_message %}
+Некоторые поля заполнены неверно.
 {% endblock %}
-{% block form_afterfield %}
-<code style="font-size: x-small;">[{{i.help_text}}]</code>
-{% endblock %}
-{% block form_button %}
-<button type="submit" class="btn btn-primary doublemarginleft">Зарегестрироваться</button>
+{% block button %}
+Зарегестрироваться
 {% endblock %}

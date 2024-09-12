@@ -9,21 +9,24 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="{{MEDIA_URL}}css/bootstrap.min.css">
     <link rel="stylesheet" href="{{MEDIA_URL}}css/main.css">
+    {% block css_files %}
+    {% endblock %}
     {% block scripts %}
     {% endblock %}
     <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" type="images/jpg" href="{{MEDIA_URL}}images/nanana.jpg" />
 </head>
 <body>
-<nav class="navbar navbar-expand-lg" style="background-color: #51484f;">
+<nav class="navbar navbar-expand-lg fixed-top" id="nav">
   <div class="container-fluid">
     <a class="navbar-brand" aria-current="page" href="{% url 'exinakai:index' %}">
-        <img src="{{MEDIA_URL}}images/nanana.jpg" alt="madxlyeternity" width="40" height="40"> <!-- 5k pp -->
+        <img src="{{MEDIA_URL}}images/nanana.jpg" alt="madxlyeternity" id="logo"> <!-- 5k pp -->
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="auth-stuff">
           {% if request.user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link text-white" href="{% url 'exinakai:add-password' %}">Добавить пароль</a>
@@ -34,37 +37,46 @@
             <li class="nav-item">
               <a class="nav-link text-white" href="{% url 'exinakai:all-passwords' %}">Мои пароли</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link text-white" href="{% url 'accounts:settings' %}">
-                  <img src="{{MEDIA_URL}}{{request.user|get_crop_user_avatar}}?{{any_random_integer}}" alt="Avatar" width="25" height="25">
-                  {{ request.user.username }}
-              </a>
-            </li>
           {% endif %}
       </ul>
       {% if not request.user.is_authenticated %}
-      <div style="display: flex">
+      <div class="d-flex">
         <form method="get" action="{% url 'accounts:login' %}">
-          <button class="btn btn-outline-info d-flex" type="submit">Войти</button>
+          <button class="btn btn-outline-default" type="submit">Войти</button>
         </form>
-        <form method="get" action="{% url 'accounts:register' %}" style="margin-left: 10px">
-          <button class="btn btn-outline-info d-flex" type="submit">Зарегестрироваться</button>
+        <form method="get" action="{% url 'accounts:register' %}" class="s-ml">
+          <button class="btn btn-outline-default" type="submit">Зарегестрироваться</button>
         </form>
       </div>
       {% else %}
-        <div style="display: flex">
-            <form method="get" action="{% url 'accounts:password-change' %}">
-              <button class="btn btn-outline-danger d-flex" type="submit">Изменить пароль {{request.user.username}}</button>
-            </form>
-            <form method="get" action="{% url 'accounts:logout' %}" style="margin-left: 10px">
-              <button class="btn btn-outline-info d-flex" type="submit">Выйти</button>
-            </form>
-        </div>
+        {% if is_all_passwords %}
+            <div class="d-flex">
+                <nav class="container" id="passwords-search">
+                  <div class="container-fluid ml">
+                    <form class="d-flex" role="search">
+                      <input class="form-control me-2" type="search" placeholder="Поиск" aria-label="Поиск" name="search" data-bs-theme="dark" value="{% firstof search '' %}">
+                      <button class="btn btn-success" type="submit">Search</button>
+                    </form>
+                  </div>
+                </nav>
+            </div>
+        {% else %}
+            <div class="d-flex">
+                <a href="{% url 'accounts:settings' %}">
+                  <img src="{{MEDIA_URL}}{{request.user|get_crop_user_avatar}}?{{any_random_integer}}" alt="Avatar" id="nav-avatar">
+                </a>
+                <form method="get" action="{% url 'accounts:logout' %}" class="s-ml">
+                  <button class="btn btn-outline-default" type="submit">Выйти</button>
+                </form>
+            </div>
+        {% endif %}
       {% endif %}
     </div>
   </div>
 </nav>
-{% block body %}
-{% endblock %}
+<div class="content">
+    {% block body %}
+    {% endblock %}
+</div>
 </body>
 </html>

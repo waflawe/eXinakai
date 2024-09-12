@@ -18,7 +18,6 @@ from exinakai.services import (
     delete_password,
     delete_password_collection,
     encrypt_and_save_password,
-    generate_random_password_from_request_data,
     get_render_ready_collections,
     get_user_collections,
     update_password,
@@ -123,7 +122,8 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
         context = {
             "collections": collections,
             "action": self.request.GET.get("action", None),
-            "search": search
+            "search": search,
+            "is_all_passwords": True
         }
         return context
 

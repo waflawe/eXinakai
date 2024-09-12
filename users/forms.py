@@ -17,18 +17,21 @@ User = get_user_model()
 class UserCreationForm(forms.ModelForm):
     password1 = forms.CharField(
         label="Пароль",
-        widget=forms.PasswordInput,
-        help_text=_("Пароль для входа в аккаунт.")
+        widget=forms.PasswordInput(attrs={"placeholder": "Пароль будущего пользователя"})
     )
     password2 = forms.CharField(
         label="Подтверждение пароля",
-        widget=forms.PasswordInput,
-        help_text=_("Повторите выбранный пароль.")
+        widget=forms.PasswordInput(attrs={"placeholder": "Повтор пороля"})
     )
 
     class Meta:
         model = User
         fields = "username", "email"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget = forms.TextInput(attrs={"placeholder": "Имя будущего пользователя"})
+        self.fields["email"].widget = forms.EmailInput(attrs={"placeholder": "Почта будущего пользователя"})
 
     def clean_username(self) -> Union[str, NoReturn]:
         username: str = self.cleaned_data.get("username", "")
@@ -57,10 +60,10 @@ class UserCreationForm(forms.ModelForm):
 
 class UserAuthenticationForm(forms.Form):
     username = forms.CharField(max_length=64, widget=forms.TextInput(attrs={
-        "class": "form-input"
+        "class": "form-input", "placeholder": "Имя пользователя"
     }), label="Имя пользователя")
     password = forms.CharField(max_length=64, min_length=8, widget=forms.PasswordInput(attrs={
-        "class": "form-input",
+        "class": "form-input", "placeholder": "Пароль пользователя"
     }), label="Пароль")
 
 
@@ -68,7 +71,7 @@ class PasswordResetForm(PasswordResetFormCore):
     email = forms.EmailField(
         label=_("Почта"),
         max_length=254,
-        widget=forms.EmailInput(attrs={"autocomplete": "email"}),
+        widget=forms.EmailInput(attrs={"autocomplete": "email", "placeholder": "Пароль для сброса"}),
     )
 
     def send_mail(
@@ -96,12 +99,13 @@ class PasswordChangeForm(PasswordChangeFormCore):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for field, label in {
-            "old_password": "Старый пароль",
-            "new_password1": "Новый пароль",
-            "new_password2": "Подтверждение нового пароля"
+        for field, (label, placeholder) in {
+            "old_password": ("Старый пароль", "Ваш старый пароль"),
+            "new_password1": ("Новый пароль", "Ваш новый пароль"),
+            "new_password2": ("Подтверждение нового пароля", "Повтор нового пароля"),
         }.items():
             self.fields[field].label = label
+            self.fields[field].widget = forms.PasswordInput(attrs={"placeholder": placeholder})
 
 
 class DataListInput(Select):
@@ -140,6 +144,7 @@ class ActivateCryptographicKeyForm(forms.Form):
     cryptographic_key = forms.CharField(
         label="Ключ шифрования",
         max_length=512,
+        widget=forms.PasswordInput(attrs={"placeholder": "Ключ"})
     )
 
 
@@ -147,5 +152,6 @@ class TwoFactorAuthenticationForm(forms.Form):
     code = forms.CharField(
         label="Код аутентификации",
         help_text="Код аутентификации, который был выслан Вам на почту.",
-        max_length=6
+        max_length=6,
+        widget=forms.TextInput(attrs={"placeholder": "Код"})
     )

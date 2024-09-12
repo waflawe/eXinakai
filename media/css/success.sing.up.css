@@ -1,0 +1,21 @@
+.content {
+    margin: auto;
+    margin-top: 100px;
+    width: 80%;
+}
+
+.center {
+    text-align: center;
+    border: 1px solid grey;
+    border-radius: 30px;
+    box-shadow: -1px 1px 5px #ccc;
+}
+
+#key {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.commented {
+    color: #86898f;
+}

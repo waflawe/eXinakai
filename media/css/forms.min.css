@@ -1,0 +1,15 @@
+input {
+    border: none;
+    outline: none;
+    border-bottom: 1px solid #ccc;
+    box-sizing: border-box;
+    padding-left: 3px;
+    padding-right: 3px;
+    width: 80%;
+    font-weight: normal;
+    background-color: #f1f1f1;
+}
+
+#submit {
+    margin-top: 10px;
+}

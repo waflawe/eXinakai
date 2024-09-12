@@ -32,6 +32,15 @@ class CryptographicKeyRequiredMixin(AccessMixin):
 
 
 class SearchService(object):
+    """
+    Search examples (n - password note search, c - password collection search):
+
+    1. mental (n)
+    2. MENTALSxSWIM (n)
+    3. /cq=MENTAL COLLECTION (c)
+    4. /cq=MENTAL COLLECTION:MENTAL NOTE (c and n)
+    """
+
     def make_search(self, queryset: QuerySet, search: Optional[str] = None) -> QuerySet:
         if not search:
             return queryset

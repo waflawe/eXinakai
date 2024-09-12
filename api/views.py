@@ -22,13 +22,13 @@ from api.serializers import (
     CryptographicKeySerializer,
     DetailedCodeSerializer,
     DetailSerializer,
+    PasswordResetSerializer,
     PasswordsCollectionSerializer,
     PasswordsSerializer,
     RandomPasswordSerializer,
     SettingsSerializer,
     TwoFactorAuthenticationCodeSerializer,
     UpdatePasswordSerializer,
-    PasswordResetSerializer
 )
 from exinakai.services import (
     change_password_collection,

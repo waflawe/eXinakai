@@ -1,15 +1,21 @@
 {% extends 'base.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/all.passwords.css">
+<link rel="stylesheet" href="{{MEDIA_URL}}css/removing.css">
+{% endblock %}
+
 {% block title %}
 Удаление {% if password %}пароля{% elif collection %}коллекции{% endif %}
 {% endblock %}
 
 {% block body %}
-<br>
-<h4 class="indent">Вы уверены, что хотите удалить {% if password %}пароль '{{ password.note }}'{% elif collection %}коллекцию '{{ collection.name }}'{% endif %}?</h4>
-<form method="POST" action="{% if password %}{% url 'exinakai:delete-password' password.pk %}{% elif collection %}{% url 'exinakai:delete-collection' collection.pk %}{% endif %}">
-    {% csrf_token %}
-    <br>
-    <button type="submit" class="btn btn-danger marginleft">Удалить</button>
-</form>
+<div class="warning">
+    <h3>Вы уверены, что хотите удалить {% if password %}пароль '<span class="bold">{{ password.note }}</span>'
+        {% elif collection %}коллекцию '<span class="bold">{{ collection.name }}</span>'{% endif %}?</h3>
+    <form method="POST" action="{% if password %}{% url 'exinakai:delete-password' password.pk %}{% elif collection %}{% url 'exinakai:delete-collection' collection.pk %}{% endif %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-default">Удалить</button>
+    </form>
+</div>
 {% endblock %}

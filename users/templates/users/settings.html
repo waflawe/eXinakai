@@ -1,49 +1,47 @@
 {% extends 'base.html' %}
 
+{% block css_files %}
+<link rel="stylesheet" href="{{MEDIA_URL}}css/all.passwords.css">
+<link rel="stylesheet" href="{{MEDIA_URL}}css/forms.min.css">
+<link rel="stylesheet" href="{{MEDIA_URL}}css/settings.css">
+{% endblock %}
+
 {% block title %}
 Настройки для {{ request.user.username }}
 {% endblock %}
 
 {% block body %}
-<style>
-    html, body {
-      overflow-x: hidden;
-      margin:0px;
-      padding:0px;
-    }
-</style>
 {% if bad_data %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <div id="form_errors">
-            <strong>Неверные данные.</strong>
-        </div>
+    <div class="container border border-danger action error">
+        Неверные данные.
     </div>
-{% elif action == "settings-updated" %}
-    <br>
-    <div class="p-3 bg-info bg-opacity-10 border border-info border-start-0 rounded-end" style="width: 45%;">
-        <h5 class="indent">Настройки успешно обновлены.</h5>
-    </div>
-    <br>
 {% endif %}
-<h1 class="indent">Настройки {{ request.user.username }}:</h1>
-<img src="{{MEDIA_URL}}{{user_avatar}}?{{any_random_integer}}" alt="Avatar" width="150" height="150" class="doublemarginleft">
-<br><br>
-<div class="doubleindent mb-3 row">
-  <label class="col-sm-2 col-form-label">Имя пользователя</label>
-    <div class="col-sm-10">
-      <input type="text" disabled value="{{ request.user.username }}">
-    </div>
-</div>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {% for i in form %}
-        <div class="doubleindent mb-3 row">
-          <label class="col-sm-2 col-form-label">{{i.label}}</label>
+<h2 class="i">Настройки <strong>{{ request.user.username }}</strong>:</h2>
+<div class="d-flex">
+    <img src="{{MEDIA_URL}}{{user_avatar}}?{{any_random_integer}}" alt="Avatar" width="150" height="150" class="d-ml">
+    <br><br>
+    <div>
+        <div class="d-i mb-3 row">
+          <label>Имя пользователя:</label>
             <div class="col-sm-10">
-              {{i}}
+              <input type="text" disabled value="{{ request.user.username }}">
             </div>
         </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary marginleft">Сохранить</button>
-</form>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for i in form %}
+                <div class="d-i mb-3 row">
+                  <label >{{i.label}}:</label>
+                    <div class="col-sm-10">
+                      {{i}}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="d-flex">
+                <button type="submit" class="btn btn-default d-ml">Сохранить</button>
+                <button onclick="location.href='{% url 'accounts:password-change' %}'" class="btn btn-default s-ml" type="button">Изменить пароль</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

@@ -1,0 +1,15 @@
+.bold {
+    font-weight: bold;
+    font-family: 'Aldrich', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.warning {
+    text-align: center;
+    margin: auto;
+    margin-top: 70px;
+    background-color: #f1f1f1;
+    padding: 10px 0px;
+    border: 1px solid #111;
+    border-radius: 20px;
+    width: 80%
+}
