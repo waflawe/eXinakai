@@ -41,7 +41,7 @@ User = get_user_model()
 
 
 class SingUpView(CreateView):
-    template_name = 'users/sing-up.html'
+    template_name = 'users/sing_up.html'
     form_class = UserCreationForm
 
     def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:

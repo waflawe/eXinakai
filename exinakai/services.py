@@ -28,7 +28,7 @@ class CryptographicKeyRequiredMixin(AccessMixin):
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         if not request.session.get("cryptographic_key", False):
             return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)   # noqa
 
 
 class SearchService(object):
@@ -100,9 +100,8 @@ def encrypt_and_save_password(
         collection = PasswordsCollection.objects.get(pk=collection)
     else:
         collection = get_user_collections(user).filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
-    collection.passwords.create(owner=user, note=note, password=encrypted_password, collection=collection)
-    key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
-    cache.delete(key=key)
+    Password.storable.create(owner=user, note=note, password=encrypted_password, collection=collection)
+    clear_user_cache(user)
     return
 
 
@@ -122,27 +121,6 @@ def get_decrypted_password(cryptographic_key: str, password: str) -> str:
     return fernet.decrypt(bytes(password, "utf-8")).decode("utf-8")
 
 
-def get_all_passwords(user: User, search: Optional[str] = None) -> QuerySet:
-    """
-    A service to retrieve all saved user passwords.
-
-    :param user: The user whose passwords are to be collected.
-    :param search: Search query on password notes.
-    :return: QuerySet of encrypted passwords.
-    """
-
-    key = f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{settings.ALL_USER_PASSWORDS_CACHE_NAME}"
-    queryset = cache.get(key=key)
-
-    if not queryset:
-        queryset = Password.storable.filter(owner=user).select_related("collection")
-        cache.set(key, queryset)
-    return SearchService().make_search(queryset, search)
-
-
-def get_password(**kwargs) -> Password: return get_object_or_404(Password, **kwargs)
-
-
 def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
     """
     Service for checking user's rights to change password.
@@ -152,7 +130,7 @@ def check_user_perms_to_edit_password(user: User, **kwargs) -> Password:
     :return: Password whose permissions to change have been checked or PermissionDenied error.
     """
 
-    password = get_password(**kwargs)
+    password = get_object_or_404(Password, **kwargs)
     if not password.owner == user:
         raise PermissionDenied("Вы не можете редактировать этот пароль.")
     return password
@@ -182,20 +160,24 @@ def generate_random_password_from_request_data(request_data: Mapping) -> tuple[s
     )
 
 
-def create_passwords_collection(owner: User, name: str) -> None:
+def get_collection_passwords(collection: PasswordsCollection, search: str | None) -> QuerySet[Password]:
     """
-    Create passwords collection from owner, name and passwords.
+    Get all passwords of some collection.
 
-    :param owner: Owner of passwords collection.
-    :param name: Name of passwords collection.
+    :param collection: PasswordsCollection object with collection.
+    :param search: Search query as string.
+    :return: QuerySet of passwords.
     """
 
-    collection = PasswordsCollection(owner=owner, name=name)
-    collection.save()
-    key = (f"{owner.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-           f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
-    cache.delete(key=key)
-    return
+    key = f"{collection.owner.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{collection.pk}"
+    passwords = cache.get(key)
+
+    if passwords is None or passwords.count == 0:
+        fields = "password", "time_added", "note", "collection__name", "owner__username"
+        passwords = Password.storable.only(*fields).filter(collection=collection).select_related("collection", "owner")
+        cache.set(key, passwords)
+
+    return passwords if not search else SearchService().make_search(passwords, search)
 
 
 def get_user_collections(user: User) -> QuerySet[PasswordsCollection]:
@@ -211,7 +193,8 @@ def get_user_collections(user: User) -> QuerySet[PasswordsCollection]:
     collections = cache.get(key)
 
     if not collections:
-        collections = PasswordsCollection.objects.filter(owner=user).prefetch_related("passwords")
+        fields = "owner__username", "name"
+        collections = PasswordsCollection.objects.only(*fields).filter(owner=user).select_related("owner")
         cache.set(key, collections)
 
     return collections
@@ -228,12 +211,12 @@ def get_render_ready_collections(user: User, search: str | None, cryptographic_k
     :return: Tuple of PasswordsCollectionRender objects with collections.
     """
 
-    collection_renders: Tuple[PasswordsCollectionRender, ...] = tuple(
-        PasswordsCollectionRender(collection, tuple(
+    collection_renders = tuple(
+        PasswordsCollectionRender(collection, tuple(   # noqa
             PasswordRender(
                 password,
                 get_decrypted_password(cryptographic_key, password.password)
-            ) for password in SearchService().make_search(collection.passwords.filter(), search)
+            ) for password in get_collection_passwords(collection, search)
         )) for collection in get_user_collections(user)
     )
 
@@ -243,13 +226,44 @@ def get_render_ready_collections(user: User, search: str | None, cryptographic_k
     return collection_renders
 
 
+def get_all_passwords(user: User, search: Optional[str] = None) -> QuerySet:
+    """
+    A service to retrieve all saved user passwords.
+
+    :param user: The user whose passwords are to be collected.
+    :param search: Search query on password notes.
+    :return: QuerySet of encrypted passwords.
+    """
+
+    collections = get_user_collections(user)
+    passwords = QuerySet(model=Password)
+    for collection in collections:
+        passwords = passwords | get_collection_passwords(collection, search)
+
+    return passwords
+
+
 def clear_user_cache(user: User) -> None:
-    key = (f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
-           f"{settings.ALL_USER_PASSWORDS_CACHE_NAME}")
-    cache.delete(key=key)
+    collections = get_user_collections(user)
+    for collection in collections:
+        cache.delete(key=f"{collection.owner.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}{collection.pk}")
     key = (f"{user.pk}{settings.DELIMITER_OF_LINKED_TO_USER_CACHE_NAMES}"
            f"{settings.ALL_USER_PASSWORDS_COLLECTIONS_CACHE_NAME}")
     cache.delete(key=key)
+    return
+
+
+def create_passwords_collection(owner: User, name: str) -> None:
+    """
+    Create passwords collection from owner, name and passwords.
+
+    :param owner: Owner of passwords collection.
+    :param name: Name of passwords collection.
+    """
+
+    collection = PasswordsCollection(owner=owner, name=name)
+    collection.save()
+    clear_user_cache(owner)
     return
 
 
@@ -267,11 +281,8 @@ def change_password_collection(user: User, query_params: Mapping, collection: in
     collection = get_object_or_404(PasswordsCollection, pk=collection)
 
     with transaction.atomic():
-        old_collection = password.collection
         password.collection = collection
         password.save()
-        old_collection.passwords.remove(password)
-        collection.passwords.add(password)
 
     clear_user_cache(user)
     return
@@ -295,11 +306,9 @@ def delete_password_collection(
         return False
 
     default_collection = collections.filter(name=settings.DEFAULT_PASSWORDS_COLLECTION_NAME).first()
-    passwords = collection_to_delete.passwords.all()
+    passwords = get_collection_passwords(collection_to_delete, None)
     with transaction.atomic():
         passwords.update(collection=default_collection)
-        for password in passwords:
-            default_collection.passwords.add(password)
         collection_to_delete.delete()
 
     clear_user_cache(user)

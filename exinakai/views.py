@@ -198,4 +198,4 @@ class UpdatePasswordView(CustomCreateView):
 
 
 class GeneratePasswordView(TemplateView):
-    template_name = "exinakai/exinakai_generate_password.html"
+    template_name = "exinakai/generate_password.html"

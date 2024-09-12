@@ -8,7 +8,6 @@ User = get_user_model()
 class PasswordsCollection(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name=_("Создатель"), related_name="Создатель")
     name = models.CharField(max_length=128, verbose_name=_("Название"))
-    passwords = models.ManyToManyField("Password")
     time_created = models.DateTimeField(auto_now_add=True, verbose_name=_("Время создания"))
 
     class Meta:

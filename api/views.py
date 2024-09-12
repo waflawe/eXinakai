@@ -250,7 +250,7 @@ class PasswordViewSet(
     """View all saved passwords."""
 
     lookup_url_kwarg = "pk"
-    permission_classes = (permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditObject)
+    permission_classes = permissions.IsAuthenticated, IsUserCryptographicKeyValid, IsUserCanEditObject
     serializer_class = PasswordsSerializer
 
     def get_queryset(self) -> QuerySet:
