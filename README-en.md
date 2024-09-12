@@ -22,8 +22,8 @@ __[Документация на русском языке](https://github.com/w
     + [Account Management](#account-management)
     + [Password Manager](#password-manager)
   * [Screenshots](#screenshots)
-    + [Account Management](#account-management-1)
     + [Password Manager](#password-manager-1)
+    + [Account Management](#account-management-1)
   * [License](#license)
 ## Quick Start <a name="quick-start"></a>
 ### Installation <a name="installation"></a>
@@ -96,6 +96,15 @@ system, you can:
 There is also a built-in flexible password generator. It works even without passing the correct
 encryption key by simply logging into your account.
 ## Screenshots <a name="screenshots"></a>
+### Password Manager <a name="password-manager-1"></a>
+1. Creating passwords:  
+   <img alt="Creating passwords" height="336" src=".githubscreenshots/add-password.png" width="700"/>
+2. Reading passwords:  
+   <img alt="Reading passwords" height="336" src=".githubscreenshots/all-passwords.png" width="700"/>
+3. Password Generation:  
+   <img alt="Generating passwords" height="336" src=".githubscreenshots/generate-password.png" width="700"/>
+4. Adding a password collection:  
+   <img alt="Adding a password collection" height="336" src=".githubscreenshots/add-collection.png" width="700"/>
 ### Account Management <a name="account-management-1"></a>
 1. Registration:  
    <img alt="Registration" height="336" src=".githubscreenshots/registration.png" width="700"/>
@@ -109,14 +118,5 @@ encryption key by simply logging into your account.
    <img alt="Changing account settings" height="336" src=".githubscreenshots/settings.png" width="700"/>
 6. Two-step authentication page:  
    <img alt="Two-step authentication page" height="336" src=".githubscreenshots/2fa.png" width="700"/>
-### Password Manager <a name="password-manager-1"></a>
-1. Creating passwords:  
-   <img alt="Creating passwords" height="336" src=".githubscreenshots/add-password.png" width="700"/>
-2. Reading passwords:  
-   <img alt="Reading passwords" height="336" src=".githubscreenshots/all-passwords.png" width="700"/>
-3. Password Generation:  
-   <img alt="Generating passwords" height="336" src=".githubscreenshots/generate-password.png" width="700"/>
-4. Adding a password collection:  
-   <img alt="Adding a password collection" height="336" src=".githubscreenshots/add-collection.png" width="700"/>
 ## License <a name="license"></a>
 This project is licensed by [MIT license](https://github.com/waflawe/eXinakai/blob/main/LICENSE).

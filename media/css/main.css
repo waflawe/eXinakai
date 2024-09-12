@@ -6,6 +6,10 @@ html, body {
   padding:0px;
 }
 
+code {
+    font-size: 11px;
+}
+
 .i{text-indent: 20px;}
 .d-i{text-indent: 40px;}
 .ml{margin-left: 20px;}

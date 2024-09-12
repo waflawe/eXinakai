@@ -22,8 +22,8 @@ __[Documentation in English](https://github.com/waflawe/eXinakai/blob/main/READM
     + [Работа с аккаунтом](#account-management)
     + [Менеджер паролей](#password-manager)
   * [Скриншоты](#screenshots)
-    + [Работа с аккаунтом](#account-management-1)
     + [Менеджер паролей](#password-manager-1)
+    + [Работа с аккаунтом](#account-management-1)
   * [Лицензия](#license)
 ## Быстрый старт <a name="quick-start"></a>
 ### Установка <a name="installation"></a>
@@ -95,6 +95,15 @@ docker-compose up
 Еще имеется встроенный гибкий генератор паролей. Он работает даже без передачи верного ключа 
 шифрования, просто войдя в аккаунт.
 ## Скриншоты <a name="screenshots"></a>
+### Менеджер паролей <a name="password-manager-1"></a>
+1. Создание паролей:  
+   <img alt="Создание паролей" height="336" src=".githubscreenshots/add-password.png" width="700"/>
+2. Чтение паролей:  
+   <img alt="Чтение паролей" height="336" src=".githubscreenshots/all-passwords.png" width="700"/>
+3. Генерация паролей:  
+   <img alt="Генерация паролей" height="336" src=".githubscreenshots/generate-password.png" width="700"/>
+4. Добавление коллекции паролей:  
+   <img alt="Добавление коллекции паролей" height="336" src=".githubscreenshots/add-collection.png" width="700"/>
 ### Работа с аккаунтом <a name="account-management-1"></a>
 1. Регистрация:  
    <img alt="Регистрация" height="336" src=".githubscreenshots/registration.png" width="700"/>
@@ -108,14 +117,5 @@ docker-compose up
    <img alt="Изменение настроек аккаунта" height="336" src=".githubscreenshots/settings.png" width="700"/>
 6. Страница двухэтапной аутентификации:  
    <img alt="Страница двухэтапной аутентификации" height="336" src=".githubscreenshots/2fa.png" width="700"/>
-### Менеджер паролей <a name="password-manager-1"></a>
-1. Создание паролей:  
-   <img alt="Создание паролей" height="336" src=".githubscreenshots/add-password.png" width="700"/>
-2. Чтение паролей:  
-   <img alt="Чтение паролей" height="336" src=".githubscreenshots/all-passwords.png" width="700"/>
-3. Генерация паролей:  
-   <img alt="Генерация паролей" height="336" src=".githubscreenshots/generate-password.png" width="700"/>
-4. Добавление коллекции паролей:  
-   <img alt="Добавление коллекции паролей" height="336" src=".githubscreenshots/add-collection.png" width="700"/>
 ## Лицензия <a name="license"></a>
 Этот проект лицензирован [MIT лицензией](https://github.com/waflawe/eXinakai/blob/main/LICENSE).
