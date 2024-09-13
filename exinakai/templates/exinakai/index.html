@@ -10,7 +10,8 @@
 
 {% block body %}
 {% if action %}
-    <div class="bg-info bg-opacity-10 border border-info message">
+<div>
+    <div class="border border-info message">
         <h5>
             {% if action == "activate-cryptographic-key-success" and request.user.is_authenticated %}
                 <span class="username">{{request.user}}</span>, Вы успешно активировали ключ шифрования.
@@ -27,8 +28,8 @@
             {% endif %}
         </h5>
     </div>
-{% endif %}
-{% if not action %}
+</div>
+{% else %}
 <br>
 {% endif %}
 <h1 class="text-center">Добро пожаловать в eXinakai!</h1>

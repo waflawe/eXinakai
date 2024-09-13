@@ -48,7 +48,13 @@ code {
     text-align: center;
     font-weight: bold;
     background-color: #f1f1f1;
-    width: 50%
+    width: 50%;
+    cursor: pointer;
+}
+
+.action:hover {
+    opacity: 0.9;
+    background-color: #e4e4e4;
 }
 
 #auth-stuff {

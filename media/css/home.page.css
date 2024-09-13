@@ -2,9 +2,16 @@
     margin: auto;
     margin-top: 70px;
     text-align: center;
+    background-color: #f1f1f1;
     width: 80%;
     border-radius: 20px;
     padding: 10px;
+    cursor: pointer;
+}
+
+.message:hover {
+    opacity: 0.9;
+    background-color: #e4e4e4;
 }
 
 .username {
