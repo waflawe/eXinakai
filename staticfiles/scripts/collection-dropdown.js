@@ -73,5 +73,6 @@ dropdownBtns.map((btn) => {
     button = new Dropdown(btn, DOWN, btn.dataset.key)
     btn.innerHTML = arrowDown
     btn.onclick = changeDropdownButtonStatus(button)
+    btn.onclick()
     return button
 })
