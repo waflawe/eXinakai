@@ -49,27 +49,14 @@
         </form>
       </div>
       {% else %}
-        {% if is_all_passwords %}
-            <div class="d-flex">
-                <nav class="container" id="passwords-search">
-                  <div class="container-fluid ml">
-                    <form class="d-flex" role="search">
-                      <input class="form-control me-2" type="search" placeholder="Поиск" aria-label="Поиск" name="search" data-bs-theme="dark" value="{% firstof search '' %}">
-                      <button class="btn btn-success" type="submit">Search</button>
-                    </form>
-                  </div>
-                </nav>
-            </div>
-        {% else %}
-            <div class="d-flex">
-                <a href="{% url 'accounts:settings' %}">
-                  <img src="{{MEDIA_URL}}{{request.user|get_crop_user_avatar}}?{{any_random_integer}}" alt="Avatar" id="nav-avatar">
-                </a>
-                <form method="get" action="{% url 'accounts:logout' %}" class="s-ml">
-                  <button class="btn btn-outline-default" type="submit">Выйти</button>
-                </form>
-            </div>
-        {% endif %}
+        <div class="d-flex">
+            <a href="{% url 'accounts:settings' %}">
+              <img src="{{MEDIA_URL}}{{request.user|get_crop_user_avatar}}?{{any_random_integer}}" alt="Avatar" id="nav-avatar">
+            </a>
+            <form method="get" action="{% url 'accounts:logout' %}" class="s-ml">
+              <button class="btn btn-outline-default" type="submit">Выйти</button>
+            </form>
+        </div>
       {% endif %}
     </div>
   </div>

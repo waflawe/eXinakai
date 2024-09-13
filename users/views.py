@@ -184,7 +184,7 @@ class SettingsView(LoginRequiredMixin, View):
         form = UpdateSettingsForm(user=request.user)
         context = {
             "form": form,
-            "user_avatar": get_upload_crop_path(str(request.user.avatar)),
+            "user_avatar": get_upload_crop_path(str(request.user.avatar)),   # noqa
             "any_random_integer": randrange(100000),
             "bad_data": True if error else False,
             "action": request.GET.get("action", None)
@@ -192,13 +192,13 @@ class SettingsView(LoginRequiredMixin, View):
         return render(request, "users/settings.html", context=context)
 
     def post(self, request: HttpRequest) -> HttpResponse:
-        old_timezone, old_avatar_path, old_email = request.user.timezone, str(request.user.avatar), request.user.email
+        old_timezone, old_avatar_path, old_email = request.user.timezone, str(request.user.avatar), request.user.email   # noqa
         form = UpdateSettingsForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             self.check_is_timezone_and_email_updated(form.instance, old_timezone, old_email)
             form.instance.save(update_fields=["email", "avatar", "timezone", "is_2fa_enabled"])
             process_avatar_and_email_if_updated(form.instance, old_avatar_path, old_email)
-            return redirect(f"{reverse('exinakai:all-passwords')}?action=settings-updated")
+            return redirect(f"{reverse('accounts:settings')}?action=settings-updated")
         return self.get(request, True)
 
     def check_is_timezone_and_email_updated(self, user: User, old_timezone: str, old_email: str) -> None:

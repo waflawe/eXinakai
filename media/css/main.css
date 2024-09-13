@@ -29,10 +29,6 @@ code {
     height: 40px;
 }
 
-#passwords-search {
-    text-align: right
-}
-
 #errors > div[role="alert"] {
     text-align: center;
     margin-top: 10px;
@@ -98,10 +94,6 @@ code {
     --bs-btn-disabled-bg:transparent;
     --bs-btn-disabled-border-color:#0dcaf0;
     --bs-gradient:none
-}
-
-.smallmarginleft {
-    margin-left: 10px;
 }
 
 /* https://cssloaders.github.io/ */

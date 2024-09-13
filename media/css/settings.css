@@ -1,7 +1,7 @@
-.error {
+.update {
     margin-top: 70px;
 }
 
-h2 {
+h2[class="i"] {
     padding-top: 5px;
 }

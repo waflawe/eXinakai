@@ -122,8 +122,7 @@ class AllPasswordsView(LoginRequiredMixin, CryptographicKeyRequiredMixin, Templa
         context = {
             "collections": collections,
             "action": self.request.GET.get("action", None),
-            "search": search,
-            "is_all_passwords": True
+            "search": search
         }
         return context
 
