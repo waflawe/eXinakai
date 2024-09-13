@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block css_files %}
-<link rel="stylesheet" href="{{MEDIA_URL}}css/all.passwords.css">
-<link rel="stylesheet" href="{{MEDIA_URL}}css/removing.css">
+<link rel="stylesheet" href="{% static 'css/all.passwords.css' %}">
+<link rel="stylesheet" href="{% static 'css/removing.css' %}">
 {% endblock %}
 
 {% block title %}

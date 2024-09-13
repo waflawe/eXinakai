@@ -3,7 +3,7 @@ journal.py
 venv/
 .env
 **/__pycache__/
-media/avatars/
+mediafiles/
 test.py
 .env.docker
 tests/test_exinakai
