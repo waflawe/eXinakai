@@ -30,7 +30,8 @@ class CachedDropdown {
 }
 
 function hidePasswords(dropdownBtn) {
-    allPasswords = document.querySelector(`#collection${dropdownBtn.index} .collection-passwords`)
+    dataKeySelector = `data-key="${dropdownBtn.index}"`
+    allPasswords = document.querySelector(`.main-collection[${dataKeySelector}] .collection-passwords`)
     flag = false
     cache.forEach((element) => {
         if (element.dropdown === dropdownBtn) {
@@ -44,7 +45,8 @@ function hidePasswords(dropdownBtn) {
 }
 
 function showPasswords(dropdownBtn) {
-    allPasswords = document.querySelector(`#collection${dropdownBtn.index} .collection-passwords`)
+    dataKeySelector = `data-key="${dropdownBtn.index}"`
+    allPasswords = document.querySelector(`.main-collection[${dataKeySelector}] .collection-passwords`)
     if (allPasswords.innerHTML != '') {
         return
     }
@@ -67,8 +69,8 @@ function changeDropdownButtonStatus(dropdownBtn) {
     }
 }
 
-dropdownBtns.map((btn, index) => {
-    button = new Dropdown(btn, DOWN, index)
+dropdownBtns.map((btn) => {
+    button = new Dropdown(btn, DOWN, btn.dataset.key)
     btn.innerHTML = arrowDown
     btn.onclick = changeDropdownButtonStatus(button)
     return button

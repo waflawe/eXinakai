@@ -13,16 +13,20 @@
 
 {% block body %}
 {% if bad_data %}
+<div>
     <div class="container border border-danger action update">
         Неверные данные.
     </div>
+</div>
 {% elif action %}
-<div class="container border border-info action update">
-    <h5>
-        {% if action == 'settings-updated' %}
-        Настройки успешно обновлены.
-        {% endif %}
-    </h5>
+<div>
+    <div class="container border border-info action update">
+        <h5>
+            {% if action == 'settings-updated' %}
+            Настройки успешно обновлены.
+            {% endif %}
+        </h5>
+    </div>
 </div>
 {% endif %}
 <h2 class="i">Настройки <strong>{{ request.user.username }}</strong>:</h2>
