@@ -145,7 +145,7 @@ class TestAccountSettings(TestsMixin):
                 settings.DEFAULT_USER_TIMEZONE,
                 False
             )
-            with open(os.path.join(settings.MEDIA_ROOT, self.test_avatar_path), "rb") as avatar:
+            with open(os.path.join(settings.STATICFILES_DIRS[0], self.test_avatar_path), "rb") as avatar:
                 data = {
                     "avatar": avatar,
                     "timezone": random.choice(common_timezones),
