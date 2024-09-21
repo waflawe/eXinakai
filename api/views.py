@@ -12,6 +12,7 @@ from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer as AuthTokenSerializerCore
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -321,19 +322,15 @@ class PasswordViewSet(
             password=instance
         )
 
-
-class GeneratePasswordAPIView(APIView):
-    """Random password generation."""
-
-    serializer_class = RandomPasswordSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
     @extend_schema(responses={
         status.HTTP_200_OK: RandomPasswordSerializer
     })
-    def get(self, request: Request) -> Response:
+    @action(detail=False, methods=["get"], permission_classes=(permissions.IsAuthenticated,))
+    def generate(self, request: Request) -> Response:
+        """Random password generation."""
+
         password, *_ = generate_random_password_from_request_data(request.query_params)
-        data = self.serializer_class({"password": password}).data
+        data = RandomPasswordSerializer({"password": password}).data
         return Response(data, status=status.HTTP_200_OK)
 
 

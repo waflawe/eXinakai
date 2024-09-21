@@ -4,7 +4,6 @@ from rest_framework.routers import SimpleRouter
 
 from api.views import (
     ActivateCryptographicKeyAPIView,
-    GeneratePasswordAPIView,
     PasswordChangeAPIView,
     PasswordResetAPIView,
     PasswordResetConfirmAPIView,
@@ -25,7 +24,6 @@ router.register(r"collections", PasswordsCollectionViewSet, basename="collection
 urlpatterns = [
     path("", include(router.urls)),
     path("settings/", UpdateSettingsAPIView.as_view(), name="settings-update"),
-    path("generate/password/", GeneratePasswordAPIView.as_view(), name="passwords-generate"),
     path("token/login/", UserLoginAPIView.as_view(), name="token-login"),
     path("token/2fa/", UserTwoFactorAuthenticationAPIView.as_view(), name="token-2fa"),
     path("key/activate/", ActivateCryptographicKeyAPIView.as_view(), name="activate-key"),
